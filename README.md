@@ -58,9 +58,6 @@ The AI algorithms account for FreeCell's supermove capability, where multiple ca
 - Cards movable to empty cascade: C/2
 - Algorithms properly evaluate supermoves to find efficient solutions
 
-## Game Numbering
-
-The implementation supports numbered games, compatible with Microsoft FreeCell's random number generator, allowing players to recreate specific deals.
 
 ## Usage
 
