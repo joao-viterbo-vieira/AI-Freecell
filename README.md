@@ -16,7 +16,7 @@ FreeCell is a solitaire card game played with a standard 52-card deck. Unlike mo
 - **Cells**: Four open cells for temporary card storage
 - **Foundations**: Four foundation piles (one for each suit) built from Ace to King
 - **Movement**: Cards can be moved one at a time, built on tableaus in descending order with alternating colors
-- **Supermoves**: While physical moves are one card at a time, the game allows moving sequences through intermediate locations
+- **Supermoves**: While physical moves are one card at a time, the game allows moving sequences through intermediate locations (Futura implementação???)
 - **Goal**: Move all cards to their foundation piles
 
 ## AI Algorithms
