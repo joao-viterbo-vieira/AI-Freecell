@@ -162,6 +162,48 @@ class FreeCellGame:
             or (card.color == BLACK and top_card.color == RED)
         )
 
+    def _is_valid_sequence(self, cards):
+        """
+        Check if a list of cards forms a valid sequence (alternating colors, descending rank).
+        Cards should be ordered from top (index 0) to bottom (last index).
+        """
+        if len(cards) <= 1:
+            return True
+
+        for i in range(len(cards) - 1):
+            upper_card = cards[i]
+            lower_card = cards[i + 1]
+            # Check if upper_card is one rank lower and opposite color than lower_card
+            if not (
+                upper_card.rank + 1 == lower_card.rank
+                and upper_card.color != lower_card.color
+            ):
+                return False
+        return True
+
+    def max_cards_movable(self, dest_idx=None):
+        """
+        Calculate the maximum number of cards that can be moved at once
+        based on available free cells and empty cascades.
+
+        Args:
+            dest_idx: If provided, exclude this cascade from empty cascades count if it's empty
+
+        Returns:
+            Maximum number of cards that can be moved
+        """
+        # Count free cells
+        num_free_cells = self.free_cells.count(None)
+
+        # Count empty cascades (excluding the destination if it's empty)
+        num_empty_cascades = 0
+        for i, cascade in enumerate(self.cascades):
+            if not cascade and (dest_idx is None or i != dest_idx):
+                num_empty_cascades += 1
+
+        # Formula: (free cells + 1) * 2^(empty cascades)
+        return (num_free_cells + 1) * (2**num_empty_cascades)
+
     def get_valid_moves(self):
         valid_moves = []
 
@@ -204,25 +246,94 @@ class FreeCellGame:
                     ) and self.can_move_to_cascade(card, i):
                         valid_moves.append(("cascade", source_type, source_idx, i))
 
+        # Add supermove detection - only from cascades to cascades
+        for src_idx, src_cascade in enumerate(self.cascades):
+            if len(src_cascade) <= 1:  # Need at least 2 cards for a supermove
+                continue
+
+            for dest_idx, dest_cascade in enumerate(self.cascades):
+                if src_idx == dest_idx:  # Can't move to the same cascade
+                    continue
+
+                # Calculate max movable cards for this specific destination
+                max_movable = self.max_cards_movable(
+                    dest_idx if not dest_cascade else None
+                )
+
+                # If we can't move multiple cards, skip supermove check
+                if max_movable <= 1:
+                    continue
+
+                # Check for valid card sequences from various positions in the cascade
+                for start_idx in range(len(src_cascade) - 2, -1, -1):
+                    sequence = src_cascade[start_idx:]
+                    sequence_length = len(sequence)
+
+                    # If sequence length exceeds what we can move, skip to the next starting position
+                    if sequence_length > max_movable:
+                        continue
+
+                    # Check if this sequence forms a valid sequence
+                    if not self._is_valid_sequence(sequence):
+                        continue
+
+                    # Empty destination is always valid for a sequence
+                    if not dest_cascade:
+                        valid_moves.append(
+                            ("supermove", "cascade", src_idx, dest_idx, sequence_length)
+                        )
+                        continue
+
+                    # If destination is not empty, check if bottom card of sequence can be placed
+                    bottom_seq_card = sequence[0]
+                    top_dest_card = dest_cascade[-1]
+
+                    if (
+                        bottom_seq_card.rank == top_dest_card.rank - 1
+                        and bottom_seq_card.color != top_dest_card.color
+                    ):
+                        valid_moves.append(
+                            ("supermove", "cascade", src_idx, dest_idx, sequence_length)
+                        )
+
         return valid_moves
 
     def make_move(self, move):
-        move_type, source_type, source_idx, dest = move
+        move_type = move[0]
 
-        # Get the card from the source
-        if source_type == "cascade":
-            card = self.cascades[source_idx].pop()
-        else:  # free_cell
-            card = self.free_cells[source_idx]
-            self.free_cells[source_idx] = None
+        if move_type == "supermove":
+            # For supermoves: move = ("supermove", "cascade", source_idx, dest_idx, num_cards)
+            _, source_type, source_idx, dest_idx, num_cards = move
 
-        # Place the card in the destination
-        if move_type == "foundation":
-            self.foundations[dest].append(card)
-        elif move_type == "free_cell":
-            self.free_cells[dest] = card
-        else:  # cascade
-            self.cascades[dest].append(card)
+            # Get the starting index in the source cascade
+            start_idx = len(self.cascades[source_idx]) - num_cards
+
+            # Get the cards to move
+            cards_to_move = self.cascades[source_idx][start_idx:]
+
+            # Remove cards from source
+            self.cascades[source_idx] = self.cascades[source_idx][:start_idx]
+
+            # Add cards to destination
+            self.cascades[dest_idx].extend(cards_to_move)
+        else:
+            # Original code for single card moves
+            move_type, source_type, source_idx, dest = move
+
+            # Get the card from the source
+            if source_type == "cascade":
+                card = self.cascades[source_idx].pop()
+            else:  # free_cell
+                card = self.free_cells[source_idx]
+                self.free_cells[source_idx] = None
+
+            # Place the card in the destination
+            if move_type == "foundation":
+                self.foundations[dest].append(card)
+            elif move_type == "free_cell":
+                self.free_cells[dest] = card
+            else:  # cascade
+                self.cascades[dest].append(card)
 
         # Record the move
         self.moves.append(move)
@@ -318,7 +429,12 @@ class FreeCellGame:
             # Check if this free cell is highlighted in the current move
             is_highlighted = False
             if highlight_move:
-                move_type, source_type, source_idx, dest = highlight_move
+                move_type, source_type, source_idx, dest = (
+                    highlight_move[0],
+                    highlight_move[1],
+                    highlight_move[2],
+                    highlight_move[3],
+                )
                 if move_type == "free_cell" and dest == i:
                     is_highlighted = True
                     dest_pos = (x + CARD_WIDTH // 2, y + CARD_HEIGHT // 2)
@@ -352,10 +468,12 @@ class FreeCellGame:
             # Check if this foundation is highlighted in the current move
             is_highlighted = False
             if highlight_move:
-                move_type, source_type, source_idx, dest = highlight_move
-                if move_type == "foundation" and dest == suit:
-                    is_highlighted = True
-                    dest_pos = (x + CARD_WIDTH // 2, y + CARD_HEIGHT // 2)
+                move_type = highlight_move[0]
+                if move_type == "foundation":
+                    _, source_type, source_idx, dest = highlight_move
+                    if dest == suit:
+                        is_highlighted = True
+                        dest_pos = (x + CARD_WIDTH // 2, y + CARD_HEIGHT // 2)
 
             # Draw foundation background
             cell_color = GRAY
@@ -402,20 +520,50 @@ class FreeCellGame:
                 # Highlight the card if it's part of the current move
                 is_highlighted = False
                 if highlight_move:
-                    move_type, source_type, source_idx, dest = highlight_move
-                    if (
-                        source_type == "cascade"
-                        and source_idx == i
-                        and j == len(cascade) - 1
-                    ):
-                        is_highlighted = True
-                        source_pos = (x + CARD_WIDTH // 2, card_y + CARD_HEIGHT // 2)
-                    elif move_type == "cascade" and dest == i and j == len(cascade) - 1:
-                        is_highlighted = True
-                        dest_pos = (x + CARD_WIDTH // 2, card_y + CARD_HEIGHT // 2)
+                    move_type = highlight_move[0]
 
-                # Draw card with optional blue border
-                card.draw(x, card_y, False)  # Draw the card normally
+                    if move_type == "supermove":
+                        # For supermoves: highlight_move = ("supermove", "cascade", source_idx, dest_idx, num_cards)
+                        _, source_type, source_idx, dest_idx, num_cards = highlight_move
+
+                        # Highlight source cards that are part of the supermove
+                        if source_idx == i and j >= len(cascade) - num_cards:
+                            is_highlighted = True
+                            if (
+                                j == len(cascade) - num_cards
+                            ):  # Only set source_pos for the bottom card of the sequence
+                                source_pos = (
+                                    x + CARD_WIDTH // 2,
+                                    card_y + CARD_HEIGHT // 2,
+                                )
+
+                        # Highlight destination
+                        if dest_idx == i and j == len(cascade) - 1:
+                            is_highlighted = True
+                            dest_pos = (x + CARD_WIDTH // 2, card_y + CARD_HEIGHT // 2)
+                    else:
+                        # Original highlight logic for regular moves
+                        move_type, source_type, source_idx, dest = highlight_move
+                        if (
+                            source_type == "cascade"
+                            and source_idx == i
+                            and j == len(cascade) - 1
+                        ):
+                            is_highlighted = True
+                            source_pos = (
+                                x + CARD_WIDTH // 2,
+                                card_y + CARD_HEIGHT // 2,
+                            )
+                        elif (
+                            move_type == "cascade"
+                            and dest == i
+                            and j == len(cascade) - 1
+                        ):
+                            is_highlighted = True
+                            dest_pos = (x + CARD_WIDTH // 2, card_y + CARD_HEIGHT // 2)
+
+                # Draw card with optional highlighting
+                card.draw(x, card_y, is_highlighted)
 
                 # If card is highlighted, add blue border on top
                 if is_highlighted:
