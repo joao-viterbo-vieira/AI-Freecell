@@ -1,6 +1,6 @@
 import time
 import psutil
-import resource
+import os
 
 
 class PerformanceMetrics:
@@ -56,6 +56,9 @@ class PerformanceMetrics:
         print(f"CPU usage: {cpu_percent:.1f}%")
 
         # Get peak memory usage with resource module
-        max_memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # MB
+        if hasattr(psutil.Process(), "memory_info"):
+            max_memory = psutil.Process(os.getpid()).memory_info().peak_wset / 1024 / 1024  # MB
+        else:
+            max_memory = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024  # MB
         print(f"Peak memory usage: {max_memory:.2f} MB")
         print("=" * 50)

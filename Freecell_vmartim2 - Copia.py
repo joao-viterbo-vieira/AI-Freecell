@@ -5,7 +5,8 @@ from collections import deque
 import heapq
 import pygame
 
-from PerformanceMetrics import PerformanceMetrics
+
+from PerformaceMetrics import PerformanceMetrics
 
 
 # Initialize pygame
@@ -30,6 +31,9 @@ BLUE = (0, 0, 180)  # Muted blue
 GRAY = (200, 200, 200)
 DARK_GRAY = (169, 169, 169)
 HIGHLIGHT = (220, 220, 150)  # Subtle highlight color
+LIGHT_GREEN = (144, 238, 144)  # Light green for easy difficulty
+LIGHT_ORANGE = (255, 165, 0)  # Orange for medium difficulty
+LIGHT_RED = (255, 99, 71)  # Tomato color for hard difficulty
 
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -44,6 +48,8 @@ mini_font = pygame.font.SysFont("Arial", 14)
 # Animation Control
 animation_delay = 0.5  # seconds between moves
 paused = False
+
+
 
 # Game timer
 game_timer = 0.0
@@ -123,15 +129,19 @@ class Card:
 
 # Game state class
 class FreeCellGame:
-    def __init__(self, initial_state=None, deck_size=52):
+    def __init__(self, initial_state=None, deck_size=52, difficulty=None):
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
         self.moves = []
         self.deck_size = deck_size  # Store deck size (52, 28, or 12)
+        self.difficulty = difficulty  # Store the difficulty level
 
         if initial_state is None:
-            self.new_game()
+            if difficulty is not None:
+                self.setup_difficulty(difficulty)
+            else:
+                self.new_game()
         else:
             for i in range(8):
                 self.cascades[i] = initial_state.cascades[i].copy()
@@ -139,6 +149,38 @@ class FreeCellGame:
             for suit in self.foundations:
                 self.foundations[suit] = initial_state.foundations[suit].copy()
             self.deck_size = initial_state.deck_size
+
+
+    def setup_difficulty(self, difficulty):
+        """Set up a predefined game with specified difficulty"""
+        self.difficulty = difficulty
+        
+        # Clear all cascades and initialize foundations and free cells
+        self.cascades = [[] for _ in range(8)]
+        self.free_cells = [None] * 4
+        self.foundations = {"H": [], "D": [], "C": [], "S": []}
+        
+        if difficulty == "easy":
+            # Example setup for easy difficulty
+            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3)]
+            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3)]
+            # Add more cards to other cascades as needed
+            
+        elif difficulty == "medium":
+            # Example setup for medium difficulty
+            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
+            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
+            # Add more cards to other cascades as needed
+            
+        elif difficulty == "hard":
+            # Example setup for hard difficulty
+            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4), Card("H", 5)]
+            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4), Card("D", 5)]
+            # Add more cards to other cascades as needed
+            
+        else:
+            # Default to random if difficulty is not recognized
+            self.new_game()
 
     def new_game(self):
         suits = ["H", "D", "C", "S"]
@@ -161,10 +203,9 @@ class FreeCellGame:
 
 
     def is_solved(self):
-        # Check if all foundations have 13 cards each
-        for suit in self.foundations:
-            if len(self.foundations[suit]) != 13:
-                return False
+        # Check if all cascades and free cells are empty
+        if any(self.cascades) or any(self.free_cells):
+            return False
         return True
 
     def can_move_to_foundation(self, card):
@@ -373,6 +414,59 @@ class FreeCellGame:
         # Record the move
         self.moves.append(move)
 
+    def handle_click(self, x, y):
+        global selected_card, selected_source
+    
+        # Check cascades
+        for i, cascade in enumerate(self.cascades):
+            if cascade and 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH:
+                if 250 <= y <= 250 + len(cascade) * 30:
+                    selected_card = cascade[-1]
+                    selected_source = ("cascade", i)
+                    print(f"Selected card from cascade {i}: {selected_card}")
+                    return
+    
+        # Check free cells
+        for i, card in enumerate(self.free_cells):
+            if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 100 <= y <= 220:
+                selected_card = card
+                selected_source = ("free_cell", i)
+                print(f"Selected card from free cell {i}: {selected_card}")
+                return
+    
+        # Check foundations
+        for i, suit in enumerate(["H", "D", "C", "S"]):
+            if SCREEN_WIDTH - 50 - CARD_WIDTH - i * (CARD_WIDTH + CARD_MARGIN) <= x <= SCREEN_WIDTH - 50 - i * (CARD_WIDTH + CARD_MARGIN) and 100 <= y <= 220:
+                if selected_card and self.can_move_to_foundation(selected_card):
+                    self.make_move(("foundation", selected_source[0], selected_source[1], suit))
+                    print(f"Moved card to foundation {suit}: {selected_card}")
+                    selected_card = None
+                    selected_source = None
+                    return
+    
+        # Move card if already selected
+        if selected_card:
+            for i, cascade in enumerate(self.cascades):
+                if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 250 <= y:
+                    if self.can_move_to_cascade(selected_card, i):
+                        self.make_move(("cascade", selected_source[0], selected_source[1], i))
+                        print(f"Moved card to cascade {i}: {selected_card}")
+                        selected_card = None
+                        selected_source = None
+                        return
+            
+            for i, cell in enumerate(self.free_cells):
+                if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 100 <= y <= 220:
+                    if cell is None:
+                        self.make_move(("free_cell", selected_source[0], selected_source[1], i))
+                        print(f"Moved card to free cell {i}: {selected_card}")
+                        selected_card = None
+                        selected_source = None
+                        return
+        
+        selected_card = None
+        selected_source = None
+
     def heuristic(self):
         """
         A heuristic function to estimate how close the game is to being solved.
@@ -519,10 +613,32 @@ class FreeCellGame:
             pygame.draw.circle(screen, BLACK, (x, 30), 10, 1)
             size_text = small_font.render(label, True, WHITE)
             screen.blit(size_text, (x + 15, 25))
+            
+        # Difficulty buttons
+        difficulty_start_x = 750
+        difficulties = [
+            ("Easy", "easy", LIGHT_GREEN), 
+            ("Medium", "medium", LIGHT_ORANGE), 
+            ("Hard", "hard", LIGHT_RED)
+        ]    
+        
+        for i, (label, diff_level, color) in enumerate(difficulties):
+            diff_rect = pygame.Rect(difficulty_start_x, 15, 70, 30)
+            # Highlight the selected difficulty
+            rect_color = color
+            if self.difficulty == diff_level:
+                # Draw a highlight border around selected difficulty
+                pygame.draw.rect(screen, WHITE, (difficulty_start_x-2, 13, 74, 34), 2)
+            
+            pygame.draw.rect(screen, rect_color, diff_rect)
+            pygame.draw.rect(screen, BLACK, diff_rect, 1)
+            diff_text = small_font.render(label, True, BLACK)
+            screen.blit(diff_text, (difficulty_start_x + 15, 20))
+            difficulty_start_x += 80  # Move to next button position
 
         # Timer display
         timer_text = small_font.render(f"Time: {game_timer:.1f}s", True, WHITE)
-        screen.blit(timer_text, (SCREEN_WIDTH - 150, 20))
+        screen.blit(timer_text, (10, SCREEN_HEIGHT- 50 ))
 
         # Source and destination positions for drawing the movement line
         source_pos = None
@@ -784,7 +900,7 @@ def solve_freecell_astar(game):
     visited.add(hash(game))
 
     # Maximum number of states to explore
-    max_states = 150000
+    max_states = 15000000
     metrics.states_explored = 0
     metrics.states_generated = 1  # Count initial state
     metrics.max_queue_size = 1  # Initial queue size
@@ -1085,6 +1201,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = pygame.mouse.get_pos()
 
+               
                 if 0 <= y <= 60:
                     # Algorithm selection
                     if 120 <= x <= 270 and 15 <= y <= 45:
@@ -1120,36 +1237,38 @@ def main():
                         start_time = time.time()
                         game_timer = 0.0
 
-                    # Deck size radio buttons
-                    elif 15 <= y <= 45:
+                            # Deck size radio buttons
+                    elif 540 <= x <= 680 and 15 <= y <= 45:
                         if 540 <= x <= 560:  # 52 cards
                             deck_size = 52
-                            game = FreeCellGame(deck_size=deck_size)
-                            solution = None
-                            solution_index = 0
-                            solving = False
-                            stats = None
-                            start_time = time.time()
-                            game_timer = 0.0
                         elif 600 <= x <= 620:  # 28 cards
                             deck_size = 28
-                            game = FreeCellGame(deck_size=deck_size)
-                            solution = None
-                            solution_index = 0
-                            solving = False
-                            stats = None
-                            start_time = time.time()
-                            game_timer = 0.0
                         elif 660 <= x <= 680:  # 12 cards
                             deck_size = 12
-                            game = FreeCellGame(deck_size=deck_size)
-                            solution = None
-                            solution_index = 0
-                            solving = False
-                            stats = None
-                            start_time = time.time()
-                            game_timer = 0.0
+                        game = FreeCellGame(deck_size=deck_size)
+                        solution = None
+                        solution_index = 0
+                        solving = False
+                        stats = None
+                        start_time = time.time()
+                        game_timer = 0.0
 
+                    # Difficulty buttons
+                    elif 750 <= x <= 1120 and 15 <= y <= 45:
+                        if 750 <= x <= 820:
+                            difficulty = "easy"
+                        elif 830 <= x <= 900:
+                            difficulty = "medium"
+                        elif 910 <= x <= 980:
+                            difficulty = "hard"
+                        game = FreeCellGame(deck_size=deck_size, difficulty=difficulty)
+                        solution = None
+                        solution_index = 0
+                        solving = False
+                        stats = None
+                        start_time = time.time()
+                        game_timer = 0.0
+                    
                 # Bottom controls (unchanged)
                 button_y = SCREEN_HEIGHT - 60
                 button_height = 40
@@ -1161,6 +1280,10 @@ def main():
                             move = solution[solution_index]
                             game.make_move(move)
                             solution_index += 1
+
+                if player_mode:
+                    game.handle_click(x, y)
+                
 
         if solving and solution and solution_index < len(solution) and not paused:
             if current_time - last_move_time >= animation_delay:
