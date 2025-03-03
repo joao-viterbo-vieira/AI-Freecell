@@ -153,26 +153,13 @@ class FreeCellGame:
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
         if difficulty == "easy":
-            self.cascades[0] = [Card("H", 1), Card("H", 2), Card("H", 3)]
-            self.cascades[1] = [Card("D", 1), Card("D", 2), Card("D", 3)]
-        elif difficulty == "medium":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
+            file_list = [164]  # Add your file names here
+            chosen_file = random.choice(file_list)
+            load_game_from_file(chosen_file)
         elif difficulty == "hard":
-            self.cascades[0] = [
-                Card("H", 1),
-                Card("S", 2),
-                Card("H", 3),
-                Card("S", 4),
-                Card("H", 5),
-            ]
-            self.cascades[1] = [
-                Card("D", 1),
-                Card("C", 2),
-                Card("D", 3),
-                Card("C", 4),
-                Card("D", 5),
-            ]
+            file_list = ["hard1.txt", "hard2.txt", "hard3.txt"]  # Add your file names here
+            chosen_file = random.choice(file_list)
+            load_game_from_file(chosen_file)
         else:
             self.new_game()
 
@@ -482,7 +469,6 @@ class FreeCellGame:
         difficulty_start_x = 750
         difficulties = [
             ("Easy", "easy", LIGHT_GREEN),
-            ("Medium", "medium", LIGHT_ORANGE),
             ("Hard", "hard", LIGHT_RED),
         ]
         for i, (label, diff_level, color) in enumerate(difficulties):
@@ -1438,8 +1424,6 @@ def main():
                             difficulty = (
                                 "easy"
                                 if 750 <= x <= 820
-                                else "medium"
-                                if 830 <= x <= 900
                                 else "hard"
                             )
                             game = FreeCellGame(
