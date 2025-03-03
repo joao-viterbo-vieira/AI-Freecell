@@ -16,7 +16,7 @@ FreeCell is a solitaire card game played with a standard 52-card deck. Unlike mo
 - **Cells**: Four open cells for temporary card storage
 - **Foundations**: Four foundation piles (one for each suit) built from Ace to King
 - **Movement**: Cards can be moved one at a time, built on tableaus in descending order with alternating colors
-- **Supermoves**: While physical moves are one card at a time, the game allows moving sequences through intermediate locations (Futura implementação???)
+- **Supermoves**: While physical moves are one card at a time, the game allows moving sequences through intermediate locations
 - **Goal**: Move all cards to their foundation piles
 
 ## AI Algorithms
@@ -49,7 +49,7 @@ The `freecellAI_UI.py` program implements four different search algorithms to so
 - May find solutions faster in some cases, but not guaranteed to find the optimal solution
 - Implementation includes depth limiting to prevent infinite searches
 
-## Supermove Implementation (ideia de implemetação???)
+## Supermove Implementation
 
 The AI algorithms account for FreeCell's supermove capability, where multiple cards can be moved in sequence:
 - Maximum movable cards: C = 2ᴹ × (N+1)
