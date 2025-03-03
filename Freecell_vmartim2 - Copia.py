@@ -203,10 +203,7 @@ class FreeCellGame:
 
 
     def is_solved(self):
-        # Check if all cascades and free cells are empty
-        if any(self.cascades) or any(self.free_cells):
-            return False
-        return True
+        return not any(self.cascades) and not any(self.free_cells)
 
     def can_move_to_foundation(self, card):
         if card is None:
@@ -414,58 +411,7 @@ class FreeCellGame:
         # Record the move
         self.moves.append(move)
 
-    def handle_click(self, x, y):
-        global selected_card, selected_source
     
-        # Check cascades
-        for i, cascade in enumerate(self.cascades):
-            if cascade and 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH:
-                if 250 <= y <= 250 + len(cascade) * 30:
-                    selected_card = cascade[-1]
-                    selected_source = ("cascade", i)
-                    print(f"Selected card from cascade {i}: {selected_card}")
-                    return
-    
-        # Check free cells
-        for i, card in enumerate(self.free_cells):
-            if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 100 <= y <= 220:
-                selected_card = card
-                selected_source = ("free_cell", i)
-                print(f"Selected card from free cell {i}: {selected_card}")
-                return
-    
-        # Check foundations
-        for i, suit in enumerate(["H", "D", "C", "S"]):
-            if SCREEN_WIDTH - 50 - CARD_WIDTH - i * (CARD_WIDTH + CARD_MARGIN) <= x <= SCREEN_WIDTH - 50 - i * (CARD_WIDTH + CARD_MARGIN) and 100 <= y <= 220:
-                if selected_card and self.can_move_to_foundation(selected_card):
-                    self.make_move(("foundation", selected_source[0], selected_source[1], suit))
-                    print(f"Moved card to foundation {suit}: {selected_card}")
-                    selected_card = None
-                    selected_source = None
-                    return
-    
-        # Move card if already selected
-        if selected_card:
-            for i, cascade in enumerate(self.cascades):
-                if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 250 <= y:
-                    if self.can_move_to_cascade(selected_card, i):
-                        self.make_move(("cascade", selected_source[0], selected_source[1], i))
-                        print(f"Moved card to cascade {i}: {selected_card}")
-                        selected_card = None
-                        selected_source = None
-                        return
-            
-            for i, cell in enumerate(self.free_cells):
-                if 50 + i * (CARD_WIDTH + CARD_MARGIN) <= x <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH and 100 <= y <= 220:
-                    if cell is None:
-                        self.make_move(("free_cell", selected_source[0], selected_source[1], i))
-                        print(f"Moved card to free cell {i}: {selected_card}")
-                        selected_card = None
-                        selected_source = None
-                        return
-        
-        selected_card = None
-        selected_source = None
 
     def heuristic(self):
         """
@@ -952,6 +898,72 @@ def solve_freecell_astar(game):
     return None, metrics  # No solution found within constraints
 
 
+
+def solve_freecell_weighted_astar(game, weight=1.5):
+    metrics = PerformanceMetrics()
+    metrics.start()
+
+    # Priority queue for WA* search - f(n) = g(n) + w * h(n)
+    queue = [(game.heuristic3() * weight, id(game), game, [])]
+    heapq.heapify(queue)
+
+    # Set to keep track of visited states
+    visited = set()
+    visited.add(hash(game))
+
+    # Maximum number of states to explore
+    max_states = 15000000
+    metrics.states_explored = 0
+    metrics.states_generated = 1  # Count initial state
+    metrics.max_queue_size = 1  # Initial queue size
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+
+        # Update max depth
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+
+        # Check if the game is solved
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+
+        # Get all valid moves from the current state
+        valid_moves = current_game.get_valid_moves()
+
+        for move in valid_moves:
+            # Create a new game state by making the move
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+
+            # Skip if we've seen this state before
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+
+            # Add the new state to the queue
+            new_moves = moves + [move]
+            # WA* uses f(n) = g(n) + w * h(n) for sorting
+            heapq.heappush(
+                queue,
+                (
+                    len(new_moves) + weight * new_game.heuristic3(),
+                    id(new_game),
+                    new_game,
+                    new_moves,
+                ),
+            )
+            visited.add(new_hash)
+
+            # Update max queue size
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+
+    metrics.stop()
+    return None, metrics  # No solution found within constraints
+
+
 # Solver using Best-First Search
 def solve_freecell_bestfirst(game):
     metrics = PerformanceMetrics()
@@ -1164,7 +1176,7 @@ def main():
 
     game_timer = 0.0
     start_time = time.time()
-    algorithms = ["A*", "Best-First", "BFS", "DFS"]
+    algorithms = ["A*", "Best-First", "BFS", "DFS", "IDS"]
     algorithm_index = 0
 
     while True:
@@ -1281,8 +1293,7 @@ def main():
                             game.make_move(move)
                             solution_index += 1
 
-                if player_mode:
-                    game.handle_click(x, y)
+         
                 
 
         if solving and solution and solution_index < len(solution) and not paused:

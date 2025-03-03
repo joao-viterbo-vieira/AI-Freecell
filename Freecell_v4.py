@@ -124,8 +124,8 @@ class FreeCellGame:
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
         if difficulty == "easy":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3)]
+            self.cascades[0] = [Card("H", 1), Card("H", 2), Card("H", 3)]
+            self.cascades[1] = [Card("D", 1), Card("D", 2), Card("D", 3)]
         elif difficulty == "medium":
             self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
             self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
@@ -520,6 +520,72 @@ def solve_freecell_astar(game):
     metrics.stop()
     return None, metrics
 
+import heapq
+
+def solve_freecell_weighted_astar(game, weight=1.5):
+    metrics = PerformanceMetrics()
+    metrics.start()
+
+    # Priority queue for WA* search - f(n) = g(n) + w * h(n)
+    queue = [(game.heuristic3() * weight, id(game), game, [])]
+    heapq.heapify(queue)
+
+    # Set to keep track of visited states
+    visited = set()
+    visited.add(hash(game))
+
+    # Maximum number of states to explore
+    max_states = 15000000
+    metrics.states_explored = 0
+    metrics.states_generated = 1  # Count initial state
+    metrics.max_queue_size = 1  # Initial queue size
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+
+        # Update max depth
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+
+        # Check if the game is solved
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+
+        # Get all valid moves from the current state
+        valid_moves = current_game.get_valid_moves()
+
+        for move in valid_moves:
+            # Create a new game state by making the move
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+
+            # Skip if we've seen this state before
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+
+            # Add the new state to the queue
+            new_moves = moves + [move]
+            # WA* uses f(n) = g(n) + w * h(n) for sorting
+            heapq.heappush(
+                queue,
+                (
+                    len(new_moves) + weight * new_game.heuristic3(),
+                    id(new_game),
+                    new_game,
+                    new_moves,
+                ),
+            )
+            visited.add(new_hash)
+
+            # Update max queue size
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+
+    metrics.stop()
+    return None, metrics  # No solution found within constraints
+
 def get_hint(game):
     moves, _ = solve_freecell_astar(game)
     return moves[0] if moves else None
@@ -612,8 +678,66 @@ def solve_freecell_dfs(game):
     metrics.stop()
     return None, metrics
 
+
+def solve_freecell_ids(game):
+    # Initialize performance metrics to track execution details
+    metrics = PerformanceMetrics()
+    metrics.start()
+    max_states = 150000  # Maximum number of states to explore before stopping
+    max_depth = 50  # Maximum depth limit for iterative deepening
+    
+    # Iteratively increase the depth limit
+    for depth_limit in range(max_depth + 1):
+        stack = [(game, [], 0)]  # Stack for DFS with (game state, move history, depth)
+        visited = set()  # Set to track visited game states
+        local_metrics = PerformanceMetrics()  # Metrics for the current depth iteration
+        local_metrics.states_explored = local_metrics.states_generated = local_metrics.max_queue_size = 1
+        depth_reached = False  # Flag to indicate if depth limit was reached
+        
+        while stack and local_metrics.states_explored < max_states:
+            current_game, moves, depth = stack.pop()
+            local_metrics.states_explored += 1
+            local_metrics.max_depth_reached = max(local_metrics.max_depth_reached, depth)
+            
+            # Check if the game is solved
+            if current_game.is_solved():
+                metrics.stop(moves)
+                return moves, metrics
+            
+            # If the current depth limit is reached, mark the flag but continue exploring other nodes
+            if depth >= depth_limit:
+                depth_reached = True
+                continue  # Ensures we backtrack instead of expanding further
+            
+            # Explore valid moves from the current game state
+            for move in reversed(current_game.get_valid_moves()):  # Reverse order for better DFS behavior
+                new_game = FreeCellGame(current_game)  # Create a new game state
+                new_game.make_move(move)  # Apply the move
+                new_hash = hash(new_game)
+                
+                # Skip already visited states to avoid loops
+                if new_hash in visited:
+                    continue
+                
+                stack.append((new_game, moves + [move], depth + 1))  # Push new state to stack
+                visited.add(new_hash)  # Mark state as visited
+                local_metrics.states_generated += 1
+                local_metrics.max_queue_size = max(local_metrics.max_queue_size, len(stack))
+        
+        # Aggregate performance metrics across depth iterations
+        metrics.states_explored += local_metrics.states_explored
+        metrics.states_generated += local_metrics.states_generated
+        metrics.max_queue_size = max(metrics.max_queue_size, local_metrics.max_queue_size)
+        
+        # If no deeper states were encountered, stop searching
+        if not depth_reached:
+            break
+    
+    metrics.stop()
+    return None, metrics
+
 def solve_freecell(game, algorithm="astar"):
-    return {"astar": solve_freecell_astar, "bestfirst": solve_freecell_bestfirst, "bfs": solve_freecell_bfs, "dfs": solve_freecell_dfs}.get(algorithm, solve_freecell_astar)(game)
+    return {"astar": solve_freecell_astar, "bestfirst": solve_freecell_bestfirst, "bfs": solve_freecell_bfs, "dfs": solve_freecell_dfs, "ids": solve_freecell_ids, "weighted_astar": solve_freecell_weighted_astar}.get(algorithm, solve_freecell_astar)(game)
 
 def main():
     global animation_delay, paused, game_timer, player_mode, selected_card, selected_source, solving, hint_move, last_moved_card
@@ -628,10 +752,11 @@ def main():
     last_move_time = 0
     game_timer = 0.0
     start_time = time.time()
-    algorithms = ["A*", "Best-First", "BFS", "DFS"]
+    algorithms = ["A*", "Best-First", "BFS", "DFS", "IDS", "WA*"]
     algorithm_index = 0
     hint_move = None
     last_moved_card = None
+
 
     while True:
         current_time = time.time()
@@ -669,16 +794,20 @@ def main():
                     elif 290 <= x <= 390 and 15 <= y <= 45 and not (game.is_solved() or (player_mode and not game.get_valid_moves())):
                         solving = True
                         paused = False
-                        solution, metrics = solve_freecell(game, "astar")  # Always use A* for "Solve"
+                        algo_map = {"A*": "astar", "Best-First": "bestfirst", "BFS": "bfs", "DFS": "dfs", "IDS": "ids", "WA*": "weighted_astar"}
+                        algo_key = algo_map.get(current_algorithm, "astar")
+                        print(algo_key)
+                        solution_data, metrics = solve_freecell(game, algo_key)
+                        solution = solution_data
                         solution_index = 0
                         hint_move = last_moved_card = None  # Clear hint and last moved card when solving starts
                         if solution:
-                            print(f"A* solution found with {len(solution)} moves!")
-                            metrics.print_report("A*")
+                            print(f"{current_algorithm} solution found with {len(solution)} moves!")
+                            metrics.print_report(f"{current_algorithm}")
                             stats = (solution, metrics.states_explored)
                         else:
-                            print("No A* solution found.")
-                            metrics.print_report("A* (No Solution)")
+                            print(f"No {current_algorithm} solution found.")
+                            metrics.print_report(f"{current_algorithm} (No Solution)")
                             solving = False
                     elif 410 <= x <= 530 and 15 <= y <= 45:
                         game = FreeCellGame(deck_size=deck_size)
@@ -697,6 +826,7 @@ def main():
                         stats = hint_move = last_moved_card = None
                         start_time = time.time()
                         game_timer = 0.0
+                    #difficulty setting
                     elif 750 <= x <= 1120 and 15 <= y <= 45:
                         difficulty = "easy" if 750 <= x <= 820 else "medium" if 830 <= x <= 900 else "hard"
                         game = FreeCellGame(deck_size=deck_size, difficulty=difficulty)
