@@ -1001,12 +1001,16 @@ def load_game_from_file(game_number):
         return None
 
 
-def save_solution_to_file(game_number, solution, metrics):
+def save_solution_to_file(game_number, solution, metrics, current_algorithm):
     """Save solution data to a file."""
     if game_number is None:
         game_number = "unknown"
 
-    filename = f"solution_game_{game_number}.txt"
+    # Ensure the solutions directory exists
+    os.makedirs("solutions", exist_ok=True)
+
+    algorithm = current_algorithm.replace('*', '')
+    filename = f"solutions/solution_game_{game_number}_{algorithm}.txt"
 
     try:
         with open(filename, "w", encoding="utf-8") as file:
@@ -1503,7 +1507,7 @@ def main():
 
                                 # Save solution to file
                                 save_solution_to_file(
-                                    current_game_number, solution, metrics
+                                    current_game_number, solution, metrics, current_algorithm
                                 )
                             else:
                                 print(f"No {current_algorithm} solution found.")
