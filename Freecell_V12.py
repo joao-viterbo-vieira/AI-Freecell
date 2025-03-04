@@ -117,7 +117,12 @@ class FreeCellGame:
 
         if initial_state is None:
             if difficulty is not None:
-                self.setup_difficulty(difficulty)
+                loaded_game = load_game_from_file(self.setup_difficulty(difficulty))
+                if loaded_game:
+                    self.cascades = loaded_game.cascades
+                    self.free_cells = loaded_game.free_cells
+                    self.foundations = loaded_game.foundations
+                    self.deck_size = loaded_game.deck_size
             else:
                 self.new_game()
         else:
@@ -133,17 +138,12 @@ class FreeCellGame:
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
-        if difficulty == "easy":
-            self.cascades[0] = [Card("H", 1), Card("H", 2), Card("H", 3)]
-            self.cascades[1] = [Card("D", 1), Card("D", 2), Card("D", 3)]
-        elif difficulty == "medium":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
-        elif difficulty == "hard":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4), Card("H", 5)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4), Card("D", 5)]
-        else:
-            self.new_game()
+        files = {
+            "easy": [164],
+            "hard": [9998]
+        }
+        selected_file = random.choice(files.get(difficulty, []))
+        return selected_file         
 
     def new_game(self):
         suits = ["H", "D", "C", "S"]
@@ -542,7 +542,7 @@ class FreeCellGame:
             screen.blit(size_text, (x + 15, 25))
 
         difficulty_start_x = 750
-        difficulties = [("Easy", "easy", LIGHT_GREEN), ("Medium", "medium", LIGHT_ORANGE), ("Hard", "hard", LIGHT_RED)]
+        difficulties = [("Easy", "easy", LIGHT_GREEN), ("Hard", "hard", LIGHT_RED)]
         for i, (label, diff_level, color) in enumerate(difficulties):
             diff_rect = pygame.Rect(difficulty_start_x, 15, 70, 30)
             if self.difficulty == diff_level:
@@ -1191,7 +1191,7 @@ def main():
                             game_timer = 0.0
                             current_game_number = None
                         elif 750 <= x <= 1120 and 15 <= y <= 45:
-                            difficulty = "easy" if 750 <= x <= 820 else "medium" if 830 <= x <= 900 else "hard"
+                            difficulty = "easy" if 750 <= x <= 820 else "hard" if 830 <= x <= 900 else "hard"
                             game = FreeCellGame(deck_size=deck_size, difficulty=difficulty)
                             solution = None
                             solution_index = 0
