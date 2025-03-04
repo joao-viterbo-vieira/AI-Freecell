@@ -6,7 +6,7 @@ import heapq
 import pygame
 import os
 
-from PerformaceMetrics import PerformanceMetrics  # Assuming typo in original; should be "PerformanceMetrics"
+from PerformanceMetrics_Mac import PerformanceMetrics  # Assuming typo in original; should be "PerformanceMetrics"
 
 pygame.init()
 
@@ -117,7 +117,12 @@ class FreeCellGame:
 
         if initial_state is None:
             if difficulty is not None:
-                self.setup_difficulty(difficulty)
+                loaded_game = load_game_from_file(self.setup_difficulty(difficulty))
+                if loaded_game:
+                    self.cascades = loaded_game.cascades
+                    self.free_cells = loaded_game.free_cells
+                    self.foundations = loaded_game.foundations
+                    self.deck_size = loaded_game.deck_size
             else:
                 self.new_game()
         else:
@@ -133,17 +138,12 @@ class FreeCellGame:
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
-        if difficulty == "easy":
-            self.cascades[0] = [Card("H", 1), Card("H", 2), Card("H", 3)]
-            self.cascades[1] = [Card("D", 1), Card("D", 2), Card("D", 3)]
-        elif difficulty == "medium":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
-        elif difficulty == "hard":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4), Card("H", 5)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4), Card("D", 5)]
-        else:
-            self.new_game()
+        files = {
+            "easy": [164],
+            "hard": [9998]
+        }
+        selected_file = random.choice(files.get(difficulty, []))
+        return selected_file 
 
     def new_game(self):
         suits = ["H", "D", "C", "S"]
@@ -394,7 +394,7 @@ class FreeCellGame:
             else:
                 selected_card = selected_source = selected_sequence = selected_sequence_source = None
 
-    def heuristic(self):
+    def meta_heuristic(self):
         score = 0
         for suit in self.foundations:
             score -= len(self.foundations[suit]) * 10
@@ -407,7 +407,11 @@ class FreeCellGame:
                     score += 1
         return score
 
-    def heuristic3(self):
+    def heuristic1(self):
+        total_missing = 52 - sum(len(self.foundations[suit]) for suit in ["H", "D", "C", "S"])
+        return total_missing
+
+    def heuristic2(self):
         cards_in_foundations = {suit: set(card.rank for card in self.foundations[suit]) for suit in ["H", "D", "C", "S"]}
         total_min_moves = 0
         for cascade in self.cascades:
@@ -417,9 +421,65 @@ class FreeCellGame:
             if card:
                 total_min_moves += max(1, sum(1 for r in range(1, card.rank) if r not in cards_in_foundations[card.suit]))
         return total_min_moves
+    
+    def heuristic3(self):
+        # Track cards in foundations
+        cards_in_foundations = {suit: set(card.rank for card in self.foundations[suit]) 
+                            for suit in ["H", "D", "C", "S"]}
+        
+        total_min_moves = 0
+        # Track next rank needed for each suit
+        next_rank_needed = {suit: max(cards_in_foundations[suit], default=0) + 1 
+                        for suit in ["H", "D", "C", "S"]}
+        
+        # Track which cards have been "moved" to foundation (suit, rank)
+        moved_to_foundation = set((suit, rank) for suit in cards_in_foundations 
+                                for rank in cards_in_foundations[suit])
+        
+        # Flatten all cards with context
+        all_cards = []
+        for i, cascade in enumerate(self.cascades):
+            for j, card in enumerate(cascade):
+                all_cards.append((card, "cascade", i, j))
+        for i, card in enumerate(self.free_cells):
+            if card:
+                all_cards.append((card, "free_cell", i, 0))
+        
+        # Sort by suit and rank (low to high)
+        all_cards.sort(key=lambda x: (x[0].suit, x[0].rank))
+        
+        # Process cards sequentially
+        for card, location, idx, pos in all_cards:
+            suit = card.suit
+            rank = card.rank
+            
+            if rank >= next_rank_needed[suit]:
+                if location == "cascade":
+                    # Count blockers, excluding cards already "moved"
+                    cascade = self.cascades[idx]
+                    blockers = 0
+                    for blocking_card in cascade[pos + 1:]:  # Cards above current card
+                        if (blocking_card.suit, blocking_card.rank) not in moved_to_foundation:
+                            blockers += 1
+                else:  # free_cell
+                    blockers = 0
+                
+                if rank == next_rank_needed[suit]:
+                    # Exact next card needed
+                    moves = max(1, blockers + 1)  # 1 to move to foundation + blockers
+                    total_min_moves += moves
+                    next_rank_needed[suit] = rank + 1
+                    moved_to_foundation.add((suit, rank))  # Mark as moved
+                else:
+                    # Higher than needed, estimate with gap
+                    gap = rank - next_rank_needed[suit]
+                    moves = max(1, blockers + gap + 1)
+                    total_min_moves += moves
+        
+        return total_min_moves
 
     def __lt__(self, other):
-        return self.heuristic() < other.heuristic()
+        return self.heuristic3() < other.heuristic3()
 
     def __eq__(self, other):
         return isinstance(other, FreeCellGame) and self.cascades == other.cascades and self.free_cells == other.free_cells and self.foundations == other.foundations
@@ -465,7 +525,7 @@ class FreeCellGame:
             screen.blit(size_text, (x + 15, 25))
 
         difficulty_start_x = 750
-        difficulties = [("Easy", "easy", LIGHT_GREEN), ("Medium", "medium", LIGHT_ORANGE), ("Hard", "hard", LIGHT_RED)]
+        difficulties = [("Easy", "easy", LIGHT_GREEN), ("Hard", "hard", LIGHT_RED)]
         for i, (label, diff_level, color) in enumerate(difficulties):
             diff_rect = pygame.Rect(difficulty_start_x, 15, 70, 30)
             if self.difficulty == diff_level:
@@ -719,19 +779,28 @@ def save_solution_to_file(game_number, solution, metrics, current_algorithm):
         with open(filename, "w", encoding="utf-8") as file:
             file.write(f"Solution for Game {game_number}\n")
             file.write("=" * 50 + "\n\n")
+
+            # Write performance metrics
             elapsed_time = metrics.end_time - metrics.start_time
+
             file.write("Performance Metrics:\n")
             file.write("-" * 50 + "\n")
             file.write(f"Time taken: {elapsed_time:.2f} seconds\n")
+            file.write(f"Memory used:{metrics.memory_used:.2f} MB\n")
+            file.write(f"Peak memory usage: {metrics.max_memory:.2f} MB\n")
             file.write(f"States explored: {metrics.states_explored}\n")
             file.write(f"States generated: {metrics.states_generated}\n")
+            file.write(f"States per second: {metrics.states_explored / elapsed_time:.2f}\n")
             file.write(f"Maximum queue size: {metrics.max_queue_size}\n")
             file.write(f"Maximum depth reached: {metrics.max_depth_reached}\n")
             file.write(f"Solution length: {len(solution)}\n\n")
+
+            # Write solution moves
             file.write("Solution Moves:\n")
             file.write("-" * 50 + "\n")
             for i, move in enumerate(solution):
                 file.write(f"Move {i + 1}: {format_move(move)}\n")
+
         print(f"Solution saved to {filename}")
         return True
     except Exception as e:
@@ -826,7 +895,7 @@ def get_hint(game):
 def solve_freecell_bestfirst(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic(), id(game), game, [])]
+    queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
     max_states = 15000
@@ -846,7 +915,7 @@ def solve_freecell_bestfirst(game):
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
-            heapq.heappush(queue, (new_game.heuristic(), id(new_game), new_game, moves + [move]))
+            heapq.heappush(queue, (new_game.heuristic3(), id(new_game), new_game, moves + [move]))
             visited.add(new_hash)
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
     metrics.stop()
@@ -1102,7 +1171,7 @@ def main():
                             game_timer = 0.0
                             current_game_number = None
                         elif 750 <= x <= 1120 and 15 <= y <= 45:
-                            difficulty = "easy" if 750 <= x <= 820 else "medium" if 830 <= x <= 900 else "hard"
+                            difficulty = "easy" if 750 <= x <= 820 else "hard" if 830 <= x <= 900 else "hard"
                             game = FreeCellGame(deck_size=deck_size, difficulty=difficulty)
                             solution = None
                             solution_index = 0
