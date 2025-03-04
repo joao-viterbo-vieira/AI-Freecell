@@ -718,15 +718,31 @@ def load_game_from_file(game_number):
         print(f"Error loading game {game_number}: {e}")
         return None
 
-def save_solution_to_file(game_number, solution, metrics):
+def save_solution_to_file(game_number, solution, metrics, current_algorithm):
+    """Save solution data to a file."""
     if game_number is None:
-        game_number = "unknown"
-    filename = f"solution_game_{game_number}.txt"
+        # Check existing files in the solutions directory
+        os.makedirs("solutions", exist_ok=True)
+        existing_files = os.listdir("solutions")
+        unknown_count = 1
+        while f"solution_game_unknown{unknown_count}_{current_algorithm.replace('*', '')}.txt" in existing_files:
+            unknown_count += 1
+        game_number = f"unknown{unknown_count}"
+
+    # Ensure the solutions directory exists
+    os.makedirs("solutions", exist_ok=True)
+
+    algorithm = current_algorithm.replace('*', '')
+    filename = f"solutions/solution_game_{game_number}_{algorithm}.txt"
+
     try:
         with open(filename, "w", encoding="utf-8") as file:
             file.write(f"Solution for Game {game_number}\n")
             file.write("=" * 50 + "\n\n")
+
+            # Write performance metrics
             elapsed_time = metrics.end_time - metrics.start_time
+
             file.write("Performance Metrics:\n")
             file.write("-" * 50 + "\n")
             file.write(f"Time taken: {elapsed_time:.2f} seconds\n")
@@ -735,10 +751,13 @@ def save_solution_to_file(game_number, solution, metrics):
             file.write(f"Maximum queue size: {metrics.max_queue_size}\n")
             file.write(f"Maximum depth reached: {metrics.max_depth_reached}\n")
             file.write(f"Solution length: {len(solution)}\n\n")
+
+            # Write solution moves
             file.write("Solution Moves:\n")
             file.write("-" * 50 + "\n")
             for i, move in enumerate(solution):
                 file.write(f"Move {i + 1}: {format_move(move)}\n")
+
         print(f"Solution saved to {filename}")
         return True
     except Exception as e:
@@ -1082,7 +1101,7 @@ def main():
                                 print(f"{current_algorithm} solution found with {len(solution)} moves!")
                                 metrics.print_report(f"{current_algorithm}")
                                 stats = (solution, metrics.states_explored)
-                                save_solution_to_file(current_game_number, solution, metrics)
+                                save_solution_to_file(current_game_number, solution, metrics, current_algorithm)
                             else:
                                 print(f"No {current_algorithm} solution found.")
                                 metrics.print_report(f"{current_algorithm} (No Solution)")
