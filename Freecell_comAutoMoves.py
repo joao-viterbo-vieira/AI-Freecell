@@ -8,7 +8,7 @@ import os
 
 from PerformanceMetrics_Mac import (
     PerformanceMetrics,
-)  # Assuming typo in original; should be "PerformanceMetrics"
+)
 
 pygame.init()
 
