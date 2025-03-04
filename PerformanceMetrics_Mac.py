@@ -19,6 +19,8 @@ class PerformanceMetrics:
         self.solution_length = 0
         self.max_depth_reached = 0
         self.branching_factor = 0
+        self.memory_used = 0
+        self.max_memory = 0
 
     def start(self):
         self.start_time = time.time()
@@ -32,13 +34,13 @@ class PerformanceMetrics:
 
     def print_report(self, algorithm_name):
         elapsed_time = self.end_time - self.start_time
-        memory_used = self.end_memory - self.start_memory
+        self.memory_used = self.end_memory - self.start_memory
 
         print("\n" + "=" * 50)
         print(f"PERFORMANCE REPORT - {algorithm_name}")
         print("=" * 50)
         print(f"Time used: {elapsed_time:.4f} seconds")
-        print(f"Memory used: {memory_used:.2f} MB")
+        print(f"Memory used: {self.memory_used:.2f} MB")
         print(f"States explored: {self.states_explored}")
         print(f"States generated: {self.states_generated}")
         if elapsed_time > 0:
@@ -47,14 +49,6 @@ class PerformanceMetrics:
         print(f"Solution length: {self.solution_length} moves")
         print(f"Maximum depth reached: {self.max_depth_reached}")
 
-        if self.states_explored > 0 and self.max_depth_reached > 0:
-            # Effective branching factor calculation (approximation)
-            ebf = self.states_generated ** (1 / max(1, self.max_depth_reached))
-            print(f"Effective branching factor: {ebf:.2f}")
-
-        # CPU and system resources
-        cpu_percent = psutil.Process().cpu_percent()
-        print(f"CPU usage: {cpu_percent:.1f}%")
 
         # Get peak memory usage with resource module
         # Note: peak_wset is Windows-specific, using rss as a fallback for other platforms
@@ -65,10 +59,10 @@ class PerformanceMetrics:
         system = platform.system()
         if system == "Windows" and hasattr(mem_info, "peak_wset"):
             # Windows-specific peak working set size
-            max_memory = mem_info.peak_wset / 1024 / 1024  # MB
+            self.max_memory = mem_info.peak_wset / 1024 / 1024  # MB
         else:
             # For macOS, Linux and others, use current RSS as an approximation
-            max_memory = mem_info.rss / 1024 / 1024  # MB
+            self.max_memory = mem_info.rss / 1024 / 1024  # MB
 
-        print(f"Peak memory usage: {max_memory:.2f} MB")
+        print(f"Peak memory usage: {self.max_memory:.2f} MB")
         print("=" * 50)

@@ -6,7 +6,7 @@ import heapq
 import pygame
 import os
 
-from PerformaceMetrics import PerformanceMetrics  # Assuming typo in original; should be "PerformanceMetrics"
+from PerformanceMetrics_Mac import PerformanceMetrics  # Assuming typo in original; should be "PerformanceMetrics"
 
 pygame.init()
 
@@ -411,7 +411,7 @@ class FreeCellGame:
             else:
                 selected_card = selected_source = selected_sequence = selected_sequence_source = None
 
-    def heuristic(self):
+    def meta_heuristic(self):
         score = 0
         for suit in self.foundations:
             score -= len(self.foundations[suit]) * 10
@@ -424,7 +424,11 @@ class FreeCellGame:
                     score += 1
         return score
 
-    def heuristic3(self):
+    def heuristic1(self):
+        total_missing = 52 - sum(len(self.foundations[suit]) for suit in ["H", "D", "C", "S"])
+        return total_missing
+
+    def heuristic2(self):
         cards_in_foundations = {suit: set(card.rank for card in self.foundations[suit]) for suit in ["H", "D", "C", "S"]}
         total_min_moves = 0
         for cascade in self.cascades:
@@ -434,9 +438,65 @@ class FreeCellGame:
             if card:
                 total_min_moves += max(1, sum(1 for r in range(1, card.rank) if r not in cards_in_foundations[card.suit]))
         return total_min_moves
+    
+    def heuristic3(self):
+        # Track cards in foundations
+        cards_in_foundations = {suit: set(card.rank for card in self.foundations[suit]) 
+                            for suit in ["H", "D", "C", "S"]}
+        
+        total_min_moves = 0
+        # Track next rank needed for each suit
+        next_rank_needed = {suit: max(cards_in_foundations[suit], default=0) + 1 
+                        for suit in ["H", "D", "C", "S"]}
+        
+        # Track which cards have been "moved" to foundation (suit, rank)
+        moved_to_foundation = set((suit, rank) for suit in cards_in_foundations 
+                                for rank in cards_in_foundations[suit])
+        
+        # Flatten all cards with context
+        all_cards = []
+        for i, cascade in enumerate(self.cascades):
+            for j, card in enumerate(cascade):
+                all_cards.append((card, "cascade", i, j))
+        for i, card in enumerate(self.free_cells):
+            if card:
+                all_cards.append((card, "free_cell", i, 0))
+        
+        # Sort by suit and rank (low to high)
+        all_cards.sort(key=lambda x: (x[0].suit, x[0].rank))
+        
+        # Process cards sequentially
+        for card, location, idx, pos in all_cards:
+            suit = card.suit
+            rank = card.rank
+            
+            if rank >= next_rank_needed[suit]:
+                if location == "cascade":
+                    # Count blockers, excluding cards already "moved"
+                    cascade = self.cascades[idx]
+                    blockers = 0
+                    for blocking_card in cascade[pos + 1:]:  # Cards above current card
+                        if (blocking_card.suit, blocking_card.rank) not in moved_to_foundation:
+                            blockers += 1
+                else:  # free_cell
+                    blockers = 0
+                
+                if rank == next_rank_needed[suit]:
+                    # Exact next card needed
+                    moves = max(1, blockers + 1)  # 1 to move to foundation + blockers
+                    total_min_moves += moves
+                    next_rank_needed[suit] = rank + 1
+                    moved_to_foundation.add((suit, rank))  # Mark as moved
+                else:
+                    # Higher than needed, estimate with gap
+                    gap = rank - next_rank_needed[suit]
+                    moves = max(1, blockers + gap + 1)
+                    total_min_moves += moves
+        
+        return total_min_moves
 
     def __lt__(self, other):
-        return self.heuristic() < other.heuristic()
+        return self.meta_heuristic() < other.meta_heuristic()
 
     def __eq__(self, other):
         return isinstance(other, FreeCellGame) and self.cascades == other.cascades and self.free_cells == other.free_cells and self.foundations == other.foundations
@@ -746,8 +806,11 @@ def save_solution_to_file(game_number, solution, metrics, current_algorithm):
             file.write("Performance Metrics:\n")
             file.write("-" * 50 + "\n")
             file.write(f"Time taken: {elapsed_time:.2f} seconds\n")
+            file.write(f"Memory used:{metrics.memory_used:.2f} MB\n")
+            file.write(f"Peak memory usage: {metrics.max_memory:.2f} MB\n")
             file.write(f"States explored: {metrics.states_explored}\n")
             file.write(f"States generated: {metrics.states_generated}\n")
+            file.write(f"States per second: {metrics.states_explored / elapsed_time:.2f}\n")
             file.write(f"Maximum queue size: {metrics.max_queue_size}\n")
             file.write(f"Maximum depth reached: {metrics.max_depth_reached}\n")
             file.write(f"Solution length: {len(solution)}\n\n")
@@ -783,7 +846,7 @@ def format_move(move):
 def solve_freecell_astar(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic3(), id(game), game, [])]
+    queue = [(game.heuristic1(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
     max_states = 150000
@@ -803,7 +866,7 @@ def solve_freecell_astar(game):
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
-            heapq.heappush(queue, (new_game.heuristic3() + len(moves) + 1, id(new_game), new_game, moves + [move]))
+            heapq.heappush(queue, (new_game.heuristic1() + len(moves) + 1, id(new_game), new_game, moves + [move]))
             visited.add(new_hash)
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
     metrics.stop()
@@ -812,7 +875,7 @@ def solve_freecell_astar(game):
 def solve_freecell_weighted_astar(game, weight=1.5):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic3() * weight, id(game), game, [])]
+    queue = [(game.heuristic2() * weight, id(game), game, [])]
     heapq.heapify(queue)
     visited = set()
     visited.add(hash(game))
@@ -836,7 +899,7 @@ def solve_freecell_weighted_astar(game, weight=1.5):
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
-            heapq.heappush(queue, (len(moves) + 1 + weight * new_game.heuristic3(), id(new_game), new_game, moves + [move]))
+            heapq.heappush(queue, (len(moves) + 1 + weight * new_game.heuristic2(), id(new_game), new_game, moves + [move]))
             visited.add(new_hash)
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
     metrics.stop()
@@ -852,7 +915,7 @@ def get_hint(game):
 def solve_freecell_bestfirst(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic(), id(game), game, [])]
+    queue = [(game.heuristic2(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
     max_states = 15000
@@ -872,7 +935,7 @@ def solve_freecell_bestfirst(game):
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
-            heapq.heappush(queue, (new_game.heuristic(), id(new_game), new_game, moves + [move]))
+            heapq.heappush(queue, (new_game.heuristic2(), id(new_game), new_game, moves + [move]))
             visited.add(new_hash)
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
     metrics.stop()
