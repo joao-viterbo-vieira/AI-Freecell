@@ -8,7 +8,7 @@ import os
 
 from PerformanceMetrics_Mac import (
     PerformanceMetrics,
-)  # Assuming typo in original; should be "PerformanceMetrics"
+)
 
 pygame.init()
 
@@ -51,11 +51,11 @@ paused = False
 player_mode = False
 selected_card = None
 selected_source = None
-# New variables for supermove selection
 selected_sequence = None
 selected_sequence_source = None
 solving = False
 last_moved_card = None  # Tracks the last moved card in paused auto-solve mode
+auto_moves_enabled = False  # Start with automoves disabled
 
 # Game timer
 game_timer = 0.0
@@ -64,11 +64,6 @@ game_timer = 0.0
 search_active = False
 search_text = ""
 current_game_number = None  # Keep track of the current game number
-
-# Auto-move control
-auto_move_enabled = True  # Default: auto-moves are enabled
-auto_move_count = 0  # Track number of auto-moves for display
-auto_move_display_time = 0  # Track when auto-moves happened
 
 
 class Card:
@@ -138,13 +133,19 @@ class FreeCellGame:
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
-        self.moves = []
+        self.moves = []  # For solver moves
+        self.player_moves = []  # For player moves in single-player mode, including automoves
         self.deck_size = deck_size
         self.difficulty = difficulty
 
         if initial_state is None:
             if difficulty is not None:
-                self.setup_difficulty(difficulty)
+                loaded_game = load_game_from_file(self.setup_difficulty(difficulty))
+                if loaded_game:
+                    self.cascades = loaded_game.cascades
+                    self.free_cells = loaded_game.free_cells
+                    self.foundations = loaded_game.foundations
+                    self.deck_size = loaded_game.deck_size
             else:
                 self.new_game()
         else:
@@ -160,29 +161,9 @@ class FreeCellGame:
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
-        if difficulty == "easy":
-            self.cascades[0] = [Card("H", 1), Card("H", 2), Card("H", 3)]
-            self.cascades[1] = [Card("D", 1), Card("D", 2), Card("D", 3)]
-        elif difficulty == "medium":
-            self.cascades[0] = [Card("H", 1), Card("S", 2), Card("H", 3), Card("S", 4)]
-            self.cascades[1] = [Card("D", 1), Card("C", 2), Card("D", 3), Card("C", 4)]
-        elif difficulty == "hard":
-            self.cascades[0] = [
-                Card("H", 1),
-                Card("S", 2),
-                Card("H", 3),
-                Card("S", 4),
-                Card("H", 5),
-            ]
-            self.cascades[1] = [
-                Card("D", 1),
-                Card("C", 2),
-                Card("D", 3),
-                Card("C", 4),
-                Card("D", 5),
-            ]
-        else:
-            self.new_game()
+        files = {"easy": [164], "hard": [9998]}
+        selected_file = random.choice(files.get(difficulty, []))
+        return selected_file
 
     def new_game(self):
         suits = ["H", "D", "C", "S"]
@@ -207,106 +188,6 @@ class FreeCellGame:
             or (foundation and card.rank == foundation[-1].rank + 1)
         )
 
-    def can_safely_move_to_foundation(self, card):
-        """
-        Checks if a card can be safely moved to the foundation.
-        Aces should always be moved to the foundation.
-        For other cards, they can only be moved if all lower-ranked cards
-        of the same suit are already in the foundation.
-
-        Parameters:
-        card (Card): The card to check
-
-        Returns:
-        bool: True if the card can be safely moved to foundation, False otherwise
-        """
-        if not card:
-            return False
-
-        # First check if the card can be moved to foundation at all
-        if not self.can_move_to_foundation(card):
-            return False
-
-        # Aces should always be moved to the foundation
-        if card.rank == 1:
-            return True
-
-        # For other cards, check if all lower cards of the same suit are in foundation
-        # This means there should be (rank - 1) cards in that suit's foundation
-        required_foundation_size = card.rank - 1
-        if len(self.foundations[card.suit]) != required_foundation_size:
-            return False
-
-        return True
-
-    def auto_move_to_foundation(self):
-        """
-        Automatically moves cards to foundation when it's safe to do so.
-        Returns the number of auto-moves made.
-        """
-        global auto_move_enabled, last_moved_card
-
-        if not auto_move_enabled:
-            return 0
-
-        moves_made = 0
-        auto_move_happened = True
-
-        while auto_move_happened:
-            auto_move_happened = False
-
-            # Check cascades
-            for i, cascade in enumerate(self.cascades):
-                if not cascade:
-                    continue
-
-                card = cascade[-1]
-                if self.can_safely_move_to_foundation(card):
-                    self.make_move(("foundation", "cascade", i, card.suit))
-                    if solving and paused:
-                        last_moved_card = ("foundation", card.suit, card)
-                    moves_made += 1
-                    auto_move_happened = True
-                    break
-
-            if auto_move_happened:
-                continue
-
-            # Check free cells
-            for i, card in enumerate(self.free_cells):
-                if not card:
-                    continue
-
-                if self.can_safely_move_to_foundation(card):
-                    self.make_move(("foundation", "free_cell", i, card.suit))
-                    if solving and paused:
-                        last_moved_card = ("foundation", card.suit, card)
-                    moves_made += 1
-                    auto_move_happened = True
-                    break
-
-        return moves_made
-
-    def make_move_with_auto(self, move):
-        """
-        Makes a move and then automatically moves any cards that can safely go to foundation.
-        Returns the total number of moves made (including auto-moves).
-        """
-        global last_moved_card, auto_move_count, auto_move_display_time
-
-        # Make the original move
-        self.make_move(move)
-        moves_made = 1
-
-        # Then do any automatic foundation moves
-        auto_moves = self.auto_move_to_foundation()
-        auto_move_count = auto_moves
-
-        if auto_moves > 0:
-            auto_move_display_time = time.time()
-
-        return moves_made + auto_moves
-
     def can_move_to_cascade(self, card, cascade_idx):
         if not card:
             return False
@@ -317,13 +198,9 @@ class FreeCellGame:
         return card.rank == top_card.rank - 1 and card.color != top_card.color
 
     def _is_valid_sequence(self, cards):
-        """
-        Check if a sequence of cards forms a valid descending sequence with alternating colors.
-        """
         if len(cards) <= 1:
             return True
         for i in range(len(cards) - 1):
-            # Check that each card has a rank one higher than the next card and a different color
             if not (
                 cards[i].rank == cards[i + 1].rank + 1
                 and cards[i].color != cards[i + 1].color
@@ -390,7 +267,122 @@ class FreeCellGame:
                         )
         return valid_moves
 
-    def make_move(self, move):
+    def get_automatic_foundation_moves(self):
+        """
+        Get moves that automatically move cards to the foundation when all lower
+        cards of all suits are already in the foundation.
+
+        For example, a 3 can be automatically moved if all 2s of each suit are
+        already in the foundation. Aces and 2s should always move to foundation.
+        """
+        global auto_moves_enabled
+        if not auto_moves_enabled:
+            return []
+
+        auto_moves = []
+
+        # Check all cascades for cards that can be moved to the foundation
+        for i, cascade in enumerate(self.cascades):
+            if cascade:
+                card = cascade[-1]
+                if self.can_move_to_foundation(card):
+                    # Check if all lower ranks of all suits are in the foundation
+                    all_lower_present = True
+                    for rank in range(1, card.rank):
+                        for suit in ["H", "D", "C", "S"]:
+                            foundation = self.foundations[suit]
+                            if not foundation or foundation[-1].rank < rank:
+                                all_lower_present = False
+                                break
+                        if not all_lower_present:
+                            break
+                    if all_lower_present:
+                        auto_moves.append(("foundation", "cascade", i, card.suit))
+                        return auto_moves  # Return the first move found
+
+        # Check free cells for cards that can be moved to the foundation
+        for i, card in enumerate(self.free_cells):
+            if card and self.can_move_to_foundation(card):
+                all_lower_present = True
+                for rank in range(1, card.rank):
+                    for suit in ["H", "D", "C", "S"]:
+                        foundation = self.foundations[suit]
+                        if not foundation or foundation[-1].rank < rank:
+                            all_lower_present = False
+                            break
+                    if not all_lower_present:
+                        break
+                if all_lower_present:
+                    auto_moves.append(("foundation", "free_cell", i, card.suit))
+                    return auto_moves  # Return the first move found
+
+        return []  # No moves found
+
+    def get_valid_moves_with_automoves(self, original_get_valid_moves=None):
+        """Get valid moves, prioritizing automatic foundation moves if enabled."""
+        auto_moves = self.get_automatic_foundation_moves()
+        if auto_moves:
+            return auto_moves
+
+        # If original method is provided, use it to avoid recursion
+        if original_get_valid_moves:
+            return original_get_valid_moves(self)
+        else:
+            # Otherwise, use direct implementation to avoid calling self.get_valid_moves() which would cause recursion
+            return self._get_valid_moves_implementation()
+
+    def _get_valid_moves_implementation(self):
+        """Direct implementation of get_valid_moves to avoid recursion."""
+        valid_moves = []
+        for source_type in ["cascade", "free_cell"]:
+            sources = (
+                [(i, cascade[-1]) for i, cascade in enumerate(self.cascades) if cascade]
+                if source_type == "cascade"
+                else [(i, card) for i, card in enumerate(self.free_cells) if card]
+            )
+            for source_idx, card in sources:
+                if self.can_move_to_foundation(card):
+                    valid_moves.append(
+                        ("foundation", source_type, source_idx, card.suit)
+                    )
+                if source_type == "cascade":
+                    for i, cell in enumerate(self.free_cells):
+                        if cell is None:
+                            valid_moves.append(
+                                ("free_cell", source_type, source_idx, i)
+                            )
+                            break
+                for i in range(8):
+                    if (
+                        source_type != "cascade" or i != source_idx
+                    ) and self.can_move_to_cascade(card, i):
+                        valid_moves.append(("cascade", source_type, source_idx, i))
+
+        for src_idx, src_cascade in enumerate(self.cascades):
+            if len(src_cascade) <= 1:
+                continue
+            for dest_idx in range(8):
+                if src_idx == dest_idx:
+                    continue
+                max_movable = self.max_cards_movable(
+                    dest_idx if not self.cascades[dest_idx] else None
+                )
+                for start_idx in range(len(src_cascade) - 2, -1, -1):
+                    sequence = src_cascade[start_idx:]
+                    if len(sequence) > max_movable or not self._is_valid_sequence(
+                        sequence
+                    ):
+                        continue
+                    if not self.cascades[dest_idx] or (
+                        sequence[0].rank == self.cascades[dest_idx][-1].rank - 1
+                        and sequence[0].color != self.cascades[dest_idx][-1].color
+                    ):
+                        valid_moves.append(
+                            ("supermove", "cascade", src_idx, dest_idx, len(sequence))
+                        )
+        return valid_moves
+
+    def make_move(self, move, is_player_move=False):
         global last_moved_card
         move_type, source_type, source_idx, dest = move[0], move[1], move[2], move[3]
         if move_type == "supermove":
@@ -398,7 +390,7 @@ class FreeCellGame:
             cards = self.cascades[source_idx][-num_cards:]
             self.cascades[source_idx] = self.cascades[source_idx][:-num_cards]
             self.cascades[dest].extend(cards)
-            if solving and paused:  # Only update in paused auto-solve mode
+            if solving and paused:
                 last_moved_card = ("cascade", dest, cards[-1])
         else:
             card = (
@@ -420,19 +412,111 @@ class FreeCellGame:
                 self.cascades[dest].append(card)
                 if solving and paused:
                     last_moved_card = ("cascade", dest, card)
-        self.moves.append(move)
+        if is_player_move:
+            self.player_moves.append(
+                ("manual" if move_type != "foundation" else "auto", move)
+            )
+        else:
+            self.moves.append(move)
+
+    def auto_move_to_foundations(self):
+        """Execute automoves to foundations if enabled, after first move, and all lower ranks of all suits are in foundations."""
+        global auto_moves_enabled
+        if (
+            not auto_moves_enabled or not self.player_moves
+        ):  # Only after first manual move
+            return []
+        auto_moves = []
+        changed = True
+        while changed:
+            changed = False
+            for i, cascade in enumerate(self.cascades):
+                if cascade:
+                    card = cascade[-1]
+                    if self.can_move_to_foundation(card):
+                        all_lower_present = True
+                        for rank in range(1, card.rank):
+                            for suit in ["H", "D", "C", "S"]:
+                                foundation = self.foundations[suit]
+                                if not foundation or foundation[-1].rank < rank:
+                                    all_lower_present = False
+                                    break
+                            if not all_lower_present:
+                                break
+                        if all_lower_present:
+                            auto_moves.append(("foundation", "cascade", i, card.suit))
+                            self.make_move(
+                                ("foundation", "cascade", i, card.suit),
+                                is_player_move=True,
+                            )
+                            self.player_moves[-1] = (
+                                "auto",
+                                ("foundation", "cascade", i, card.suit),
+                            )  # Tag as automove
+                            changed = True
+                            break
+            if not changed:
+                for i, card in enumerate(self.free_cells):
+                    if card and self.can_move_to_foundation(card):
+                        all_lower_present = True
+                        for rank in range(1, card.rank):
+                            for suit in ["H", "D", "C", "S"]:
+                                foundation = self.foundations[suit]
+                                if not foundation or foundation[-1].rank < rank:
+                                    all_lower_present = False
+                                    break
+                            if not all_lower_present:
+                                break
+                        if all_lower_present:
+                            auto_moves.append(("foundation", "free_cell", i, card.suit))
+                            self.make_move(
+                                ("foundation", "free_cell", i, card.suit),
+                                is_player_move=True,
+                            )
+                            self.player_moves[-1] = (
+                                "auto",
+                                ("foundation", "free_cell", i, card.suit),
+                            )  # Tag as automove
+                            changed = True
+                            break
+        return auto_moves
+
+    def undo_last_move(self):
+        """Undo only the last move (manual or auto) in player_moves."""
+        if not self.player_moves:
+            return False
+        last_action = self.player_moves.pop()
+        _, move = last_action  # Ignore action_type, treat all moves the same
+
+        move_type, source_type, source_idx, dest = move
+        if move_type == "supermove":
+            num_cards = move[4]
+            cards = self.cascades[dest][-num_cards:]
+            self.cascades[dest] = self.cascades[dest][:-num_cards]
+            self.cascades[source_idx].extend(cards)
+        else:
+            if move_type == "foundation":
+                card = self.foundations[dest].pop()
+            elif move_type == "free_cell":
+                card = self.free_cells[dest]
+                self.free_cells[dest] = None
+            else:  # cascade
+                card = self.cascades[dest].pop()
+            if source_type == "cascade":
+                self.cascades[source_idx].append(card)
+            else:  # free_cell
+                self.free_cells[source_idx] = card
+
+        return True
 
     def handle_click(self, x, y):
-        global selected_card, selected_source, hint_move, selected_sequence, selected_sequence_source, auto_move_enabled, auto_move_count, auto_move_display_time
+        global \
+            selected_card, \
+            selected_source, \
+            hint_move, \
+            selected_sequence, \
+            selected_sequence_source
 
-        # Check for auto-move toggle button click
-
-        auto_toggle_rect = pygame.Rect(SCREEN_WIDTH - 340, SCREEN_HEIGHT - 60, 100, 40)
-        if auto_toggle_rect.collidepoint((x, y)):
-            auto_move_enabled = not auto_move_enabled
-            return
-
-        # If no card is selected and no sequence is selected
         if selected_card is None and selected_sequence is None:
             for i, cascade in enumerate(self.cascades):
                 if (
@@ -441,28 +525,22 @@ class FreeCellGame:
                     <= x
                     <= 50 + i * (CARD_WIDTH + CARD_MARGIN) + CARD_WIDTH
                 ):
-                    # Find which card in the cascade was clicked
                     for j in range(len(cascade)):
                         card_y = 250 + j * 30
                         if card_y <= y <= card_y + CARD_HEIGHT:
-                            # If clicked on a card that's not the last one, check if it's part of a valid sequence
                             if j < len(cascade) - 1:
                                 sequence = cascade[j:]
                                 if (
                                     self._is_valid_sequence(sequence)
                                     and len(sequence) <= self.max_cards_movable()
                                 ):
-                                    # Select the sequence for a supermove
                                     selected_sequence = sequence
                                     selected_sequence_source = ("cascade", i, j)
                                     return
-                            # Otherwise select just the last card for a regular move
                             if j == len(cascade) - 1:
                                 selected_card = cascade[-1]
                                 selected_source = ("cascade", i)
                                 return
-
-                    # If clicked on the cascade area but not on a specific card
                     card_y = 250 + (len(cascade) - 1) * 30
                     if 250 <= y <= card_y + CARD_HEIGHT:
                         selected_card = cascade[-1]
@@ -481,19 +559,15 @@ class FreeCellGame:
                     selected_source = ("free_cell", i)
                     return
 
-        # If a card or sequence is selected
         else:
             move_made = False
 
-            # If a sequence is selected
             if selected_sequence is not None:
                 for i in range(8):
                     cascade_x = 50 + i * (CARD_WIDTH + CARD_MARGIN)
                     if cascade_x <= x <= cascade_x + CARD_WIDTH and 250 <= y:
                         src_idx = selected_sequence_source[1]
                         src_start_idx = selected_sequence_source[2]
-
-                        # Check if the sequence can be moved to this cascade
                         if src_idx != i and (
                             not self.cascades[i]
                             or (
@@ -503,14 +577,14 @@ class FreeCellGame:
                                 != self.cascades[i][-1].color
                             )
                         ):
-                            # Make the supermove
                             num_cards = len(selected_sequence)
-                            self.make_move_with_auto(
-                                ("supermove", "cascade", src_idx, i, num_cards)
+                            self.make_move(
+                                ("supermove", "cascade", src_idx, i, num_cards),
+                                is_player_move=True,
                             )
+                            self.auto_move_to_foundations()
                             move_made = True
 
-            # If a single card is selected
             else:
                 for i, suit in enumerate(["H", "D", "C", "S"]):
                     if (
@@ -519,23 +593,30 @@ class FreeCellGame:
                         <= SCREEN_WIDTH - 50 - i * (CARD_WIDTH + CARD_MARGIN)
                         and 100 <= y <= 220
                     ):
-                        if self.can_move_to_foundation(selected_card):
-                            self.make_move_with_auto(
+                        if (
+                            self.can_move_to_foundation(selected_card)
+                            and selected_card.suit == suit
+                        ):
+                            self.make_move(
                                 (
                                     "foundation",
                                     selected_source[0],
                                     selected_source[1],
                                     suit,
-                                )
+                                ),
+                                is_player_move=True,
                             )
+                            self.auto_move_to_foundations()
                             move_made = True
                 for i in range(8):
                     cascade_x = 50 + i * (CARD_WIDTH + CARD_MARGIN)
                     if cascade_x <= x <= cascade_x + CARD_WIDTH and 250 <= y:
                         if self.can_move_to_cascade(selected_card, i):
-                            self.make_move_with_auto(
-                                ("cascade", selected_source[0], selected_source[1], i)
+                            self.make_move(
+                                ("cascade", selected_source[0], selected_source[1], i),
+                                is_player_move=True,
                             )
+                            self.auto_move_to_foundations()
                             move_made = True
                 for i in range(4):
                     if (
@@ -548,9 +629,16 @@ class FreeCellGame:
                             self.free_cells[i] is None
                             and selected_source[0] == "cascade"
                         ):
-                            self.make_move_with_auto(
-                                ("free_cell", selected_source[0], selected_source[1], i)
+                            self.make_move(
+                                (
+                                    "free_cell",
+                                    selected_source[0],
+                                    selected_source[1],
+                                    i,
+                                ),
+                                is_player_move=True,
                             )
+                            self.auto_move_to_foundations()
                             move_made = True
 
             if move_made:
@@ -560,9 +648,9 @@ class FreeCellGame:
             else:
                 selected_card = selected_source = selected_sequence = (
                     selected_sequence_source
-                ) = None  # Unselect if move is invalid
+                ) = None
 
-    def heuristic(self):
+    def meta_heuristic(self):
         score = 0
         for suit in self.foundations:
             score -= len(self.foundations[suit]) * 10
@@ -578,7 +666,13 @@ class FreeCellGame:
                     score += 1
         return score
 
-    def heuristic3(self):
+    def heuristic1(self):
+        total_missing = 52 - sum(
+            len(self.foundations[suit]) for suit in ["H", "D", "C", "S"]
+        )
+        return total_missing
+
+    def heuristic2(self):
         cards_in_foundations = {
             suit: set(card.rank for card in self.foundations[suit])
             for suit in ["H", "D", "C", "S"]
@@ -606,8 +700,74 @@ class FreeCellGame:
                 )
         return total_min_moves
 
+    def heuristic3(self):
+        # Track cards in foundations
+        cards_in_foundations = {
+            suit: set(card.rank for card in self.foundations[suit])
+            for suit in ["H", "D", "C", "S"]
+        }
+
+        total_min_moves = 0
+        # Track next rank needed for each suit
+        next_rank_needed = {
+            suit: max(cards_in_foundations[suit], default=0) + 1
+            for suit in ["H", "D", "C", "S"]
+        }
+
+        # Track which cards have been "moved" to foundation (suit, rank)
+        moved_to_foundation = set(
+            (suit, rank)
+            for suit in cards_in_foundations
+            for rank in cards_in_foundations[suit]
+        )
+
+        # Flatten all cards with context
+        all_cards = []
+        for i, cascade in enumerate(self.cascades):
+            for j, card in enumerate(cascade):
+                all_cards.append((card, "cascade", i, j))
+        for i, card in enumerate(self.free_cells):
+            if card:
+                all_cards.append((card, "free_cell", i, 0))
+
+        # Sort by suit and rank (low to high)
+        all_cards.sort(key=lambda x: (x[0].suit, x[0].rank))
+
+        # Process cards sequentially
+        for card, location, idx, pos in all_cards:
+            suit = card.suit
+            rank = card.rank
+
+            if rank >= next_rank_needed[suit]:
+                if location == "cascade":
+                    # Count blockers, excluding cards already "moved"
+                    cascade = self.cascades[idx]
+                    blockers = 0
+                    for blocking_card in cascade[pos + 1 :]:  # Cards above current card
+                        if (
+                            blocking_card.suit,
+                            blocking_card.rank,
+                        ) not in moved_to_foundation:
+                            blockers += 1
+                else:  # free_cell
+                    blockers = 0
+
+                if rank == next_rank_needed[suit]:
+                    # Exact next card needed
+                    moves = max(1, blockers + 1)  # 1 to move to foundation + blockers
+                    total_min_moves += moves
+                    next_rank_needed[suit] = rank + 1
+                    moved_to_foundation.add((suit, rank))  # Mark as moved
+                else:
+                    # Higher than needed, estimate with gap
+                    gap = rank - next_rank_needed[suit]
+                    moves = max(1, blockers + gap + 1)
+                    total_min_moves += moves
+
+        return total_min_moves
+
     def __lt__(self, other):
-        return self.heuristic() < other.heuristic()
+        return self.heuristic3() < other.heuristic3()
 
     def __eq__(self, other):
         return (
@@ -635,7 +795,7 @@ class FreeCellGame:
         stats=None,
         algorithm="A*",
         hint_move=None,
-        auto_moves=None,
+        solution_index=0,
     ):
         screen.fill(GREEN)
         pygame.draw.rect(screen, DARK_GRAY, (0, 0, SCREEN_WIDTH, 60))
@@ -674,11 +834,7 @@ class FreeCellGame:
             screen.blit(size_text, (x + 15, 25))
 
         difficulty_start_x = 750
-        difficulties = [
-            ("Easy", "easy", LIGHT_GREEN),
-            ("Medium", "medium", LIGHT_ORANGE),
-            ("Hard", "hard", LIGHT_RED),
-        ]
+        difficulties = [("Easy", "easy", LIGHT_GREEN), ("Hard", "hard", LIGHT_RED)]
         for i, (label, diff_level, color) in enumerate(difficulties):
             diff_rect = pygame.Rect(difficulty_start_x, 15, 70, 30)
             if self.difficulty == diff_level:
@@ -692,16 +848,10 @@ class FreeCellGame:
         timer_text = small_font.render(f"Time: {game_timer:.1f}s", True, WHITE)
         screen.blit(timer_text, (10, SCREEN_HEIGHT - 30))
 
-        # Draw auto-move toggle button
-        auto_toggle_rect = pygame.Rect(SCREEN_WIDTH - 340, SCREEN_HEIGHT - 60, 100, 40)
-        pygame.draw.rect(
-            screen, YELLOW if auto_move_enabled else DARK_GRAY, auto_toggle_rect
-        )
-        pygame.draw.rect(screen, BLACK, auto_toggle_rect, 1)
-        auto_text = small_font.render(
-            "Auto-Move", True, BLACK if auto_move_enabled else WHITE
-        )
-        screen.blit(auto_text, (SCREEN_WIDTH - 330, SCREEN_HEIGHT - 50))
+        # Add move counter - positioned near the game number
+        moves_count = len(self.player_moves) if player_mode else solution_index
+        moves_text = small_font.render(f"Moves: {moves_count}", True, WHITE)
+        screen.blit(moves_text, (20, SCREEN_HEIGHT - 90))  # Position above game number
 
         source_pos = dest_pos = None
         for i, card in enumerate(self.free_cells):
@@ -824,7 +974,6 @@ class FreeCellGame:
             pygame.draw.rect(screen, GRAY, (x, y, CARD_WIDTH, CARD_HEIGHT), 1)
             for j, card in enumerate(cascade):
                 card_y = y + j * 30
-                # Check if this card is part of a selected sequence
                 is_selected_sequence = (
                     selected_sequence is not None
                     and selected_sequence_source is not None
@@ -832,7 +981,6 @@ class FreeCellGame:
                     and selected_sequence_source[1] == i
                     and j >= selected_sequence_source[2]
                 )
-
                 is_regular_highlight = (
                     is_selected_sequence
                     or (
@@ -977,12 +1125,16 @@ class FreeCellGame:
 
         button_y = SCREEN_HEIGHT - 60
         if not game_ended:
-            step_rect = pygame.Rect(SCREEN_WIDTH - 120, button_y, 100, 40)
-            pygame.draw.rect(screen, (0, 140, 0), step_rect)
-            pygame.draw.rect(screen, BLACK, step_rect, 1)
-            step_text = small_font.render("Step", True, WHITE)
-            screen.blit(step_text, (SCREEN_WIDTH - 105, button_y + 10))
+            # Add Step Back button (to the left of pause button)
+            step_back_rect = pygame.Rect(SCREEN_WIDTH - 340, button_y, 100, 40)
+            pygame.draw.rect(
+                screen, (0, 140, 0), step_back_rect
+            )  # Same green color as Step button
+            pygame.draw.rect(screen, BLACK, step_back_rect, 1)
+            step_back_text = small_font.render("Step Back", True, WHITE)
+            screen.blit(step_back_text, (SCREEN_WIDTH - 325, button_y + 10))
 
+            # Existing pause button
             pause_rect = pygame.Rect(SCREEN_WIDTH - 230, button_y, 100, 40)
             pygame.draw.rect(screen, DARK_GRAY, pause_rect)
             pygame.draw.rect(screen, BLACK, pause_rect, 1)
@@ -990,6 +1142,13 @@ class FreeCellGame:
                 "Pause" if not paused else "Resume", True, WHITE
             )
             screen.blit(pause_text, (SCREEN_WIDTH - 215, button_y + 10))
+
+            # Existing step button
+            step_rect = pygame.Rect(SCREEN_WIDTH - 120, button_y, 100, 40)
+            pygame.draw.rect(screen, (0, 140, 0), step_rect)
+            pygame.draw.rect(screen, BLACK, step_rect, 1)
+            step_text = small_font.render("Step", True, WHITE)
+            screen.blit(step_text, (SCREEN_WIDTH - 105, button_y + 10))
 
         button_pos_x = SCREEN_WIDTH - 150
         button_pos_y = 250
@@ -999,12 +1158,50 @@ class FreeCellGame:
             pygame.draw.rect(screen, BLACK, play_rect, 1)
             play_text = small_font.render("I want to play", True, WHITE)
             screen.blit(play_text, (button_pos_x + 5, button_pos_y + 5))
+
+            # Solver Auto Moves Button below "I want to play"
+            global auto_moves_enabled
+            solver_auto_rect = pygame.Rect(button_pos_x, button_pos_y + 40, 130, 30)
+            if auto_moves_enabled:
+                pygame.draw.rect(screen, LIGHT_GREEN, solver_auto_rect)
+                pygame.draw.rect(screen, BLACK, solver_auto_rect, 1)
+                auto_text = small_font.render("AutoMove On", True, BLACK)
+            else:
+                pygame.draw.rect(screen, LIGHT_RED, solver_auto_rect)
+                pygame.draw.rect(screen, BLACK, solver_auto_rect, 1)
+                auto_text = small_font.render("AutoMove off", True, BLACK)
+            screen.blit(auto_text, (button_pos_x + 10, button_pos_y + 45))
+
         elif player_mode and not solving and not game_ended:
             hint_rect = pygame.Rect(button_pos_x, button_pos_y, 100, 30)
             pygame.draw.rect(screen, YELLOW, hint_rect)
             pygame.draw.rect(screen, BLACK, hint_rect, 1)
             hint_text = small_font.render("Hint", True, BLACK)
             screen.blit(hint_text, (button_pos_x + 15, button_pos_y + 5))
+            # Add Undo button below Hint
+            if self.player_moves:  # Show only if there are moves to undo
+                undo_rect = pygame.Rect(
+                    button_pos_x, button_pos_y + 40, 100, 30
+                )  # 40px below Hint
+                pygame.draw.rect(screen, LIGHT_ORANGE, undo_rect)
+                pygame.draw.rect(screen, BLACK, undo_rect, 1)
+                undo_text = small_font.render("Undo", True, BLACK)
+                screen.blit(undo_text, (button_pos_x + 15, button_pos_y + 45))
+            # Add Auto On/Off buttons below Undo - for Player mode auto-moves
+            auto_rect_y = button_pos_y + 80  # 80px below Hint (40px Undo + 40px gap)
+            player_auto_enabled = auto_moves_enabled  # We're using the same variable for both player and solver
+            if player_auto_enabled:
+                auto_off_rect = pygame.Rect(button_pos_x, auto_rect_y, 100, 30)
+                pygame.draw.rect(screen, RED, auto_off_rect)
+                pygame.draw.rect(screen, BLACK, auto_off_rect, 1)
+                auto_off_text = small_font.render("Auto Off", True, WHITE)
+                screen.blit(auto_off_text, (button_pos_x + 10, auto_rect_y + 5))
+            else:
+                auto_on_rect = pygame.Rect(button_pos_x, auto_rect_y, 100, 30)
+                pygame.draw.rect(screen, GREEN, auto_on_rect)
+                pygame.draw.rect(screen, BLACK, auto_on_rect, 1)
+                auto_on_text = small_font.render("Auto On", True, WHITE)
+                screen.blit(auto_on_text, (button_pos_x + 15, auto_rect_y + 5))
 
         pygame.draw.rect(
             screen, DARK_GRAY, (SCREEN_WIDTH - 230, button_y - 50, 210, 30)
@@ -1016,38 +1213,39 @@ class FreeCellGame:
         screen.blit(speed_text, (SCREEN_WIDTH - 220, button_y - 45))
 
         info_text = mini_font.render(
-            "Shortcuts: Space=Pause, N=New Game, S=Step, +/- = Speed", True, WHITE
+            "Shortcuts: Space=Pause, N=New Game, S=Step, B=Step Back, +/- = Speed",
+            True,
+            WHITE,
         )
         screen.blit(info_text, (200, SCREEN_HEIGHT - 20))
 
-        # Draw search box (moved to left side)
+        # Search box and Load button
         search_box_rect = pygame.Rect(50, SCREEN_HEIGHT - 60, 120, 30)
         pygame.draw.rect(screen, WHITE, search_box_rect)
         pygame.draw.rect(screen, BLACK, search_box_rect, 1)
-        search_label = mini_font.render("Game #:", True, WHITE)
+        search_label = small_font.render(
+            "Game #:", True, WHITE
+        )  # Changed from mini_font to small_font
         screen.blit(search_label, (search_box_rect.x - 50, search_box_rect.y + 5))
         search_content = small_font.render(search_text, True, BLACK)
         screen.blit(search_content, (search_box_rect.x + 5, search_box_rect.y + 5))
 
-        # Display current game number if available
+        # Add Load button
+        load_button_rect = pygame.Rect(180, SCREEN_HEIGHT - 60, 60, 30)
+        pygame.draw.rect(screen, BLUE, load_button_rect)
+        pygame.draw.rect(screen, BLACK, load_button_rect, 1)
+        load_text = small_font.render("Load", True, WHITE)
+        screen.blit(load_text, (load_button_rect.x + 15, load_button_rect.y + 5))
+
         if current_game_number is not None:
             game_num_text = mini_font.render(
                 f"Current Game: {current_game_number}", True, WHITE
             )
-            screen.blit(game_num_text, (200, SCREEN_HEIGHT - 50))
-
-        # Display auto-move notification
-        if auto_moves and auto_moves > 0:
-            auto_move_text = font.render(
-                f"{auto_moves} cards auto-moved to foundation!", True, YELLOW
-            )
             screen.blit(
-                auto_move_text,
-                (SCREEN_WIDTH // 2 - auto_move_text.get_width() // 2, 70),
-            )
+                game_num_text, (300, SCREEN_HEIGHT - 50)
+            )  # Moved down from SCREEN_HEIGHT - 50
 
         if search_active:
-            # Draw cursor
             cursor_pos = search_box_rect.x + 5 + small_font.size(search_text)[0]
             if int(time.time() * 2) % 2 == 0:  # Blink cursor
                 pygame.draw.line(
@@ -1074,39 +1272,29 @@ class FreeCellGame:
 
 
 def load_game_from_file(game_number):
-    """Load a specific FreeCell game layout from a file."""
     global current_game_number
     try:
         file_path = f"games/game{game_number}.txt"
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
 
-        # Create a new game state
         game = FreeCellGame()
         game.cascades = [[] for _ in range(8)]
         game.free_cells = [None] * 4
         game.foundations = {"H": [], "D": [], "C": [], "S": []}
 
-        # Split content by rows
         rows = [row.strip() for row in content.split("\n") if row.strip()]
-
-        # Process each row
         for row_idx, row in enumerate(rows):
             cards = [card.strip() for card in row.split("\t") if card.strip()]
-
             for col_idx, card_str in enumerate(cards):
-                if col_idx >= 8:  # Ensure we don't exceed 8 cascades
+                if col_idx >= 8:
                     break
-
-                # Parse the card
                 if len(card_str) >= 3 and card_str[:2] == "10":
                     rank = 10
                     suit_char = card_str[2]
                 else:
                     rank_char = card_str[0]
                     suit_char = card_str[1]
-
-                    # Convert rank to int
                     if rank_char == "A":
                         rank = 1
                     elif rank_char == "J":
@@ -1117,15 +1305,10 @@ def load_game_from_file(game_number):
                         rank = 13
                     else:
                         rank = int(rank_char)
-
-                # Convert suit symbol to letter code
                 suit_map = {"♥": "H", "♦": "D", "♣": "C", "♠": "S"}
                 suit = suit_map.get(suit_char)
-
                 if not suit:
                     raise ValueError(f"Invalid suit in card: {card_str}")
-
-                # Add card to the appropriate cascade
                 game.cascades[col_idx].append(Card(suit, rank))
 
         print(f"Successfully loaded game {game_number}")
@@ -1136,15 +1319,49 @@ def load_game_from_file(game_number):
         return None
 
 
-def save_solution_to_file(game_number, solution, metrics):
-    """Save solution data to a file."""
+def save_solution_to_file(
+    game_number, solution, metrics, current_algorithm, initial_game=None
+):
     if game_number is None:
-        game_number = "unknown"
+        os.makedirs("solutions", exist_ok=True)
+        existing_files = os.listdir("solutions")
+        unknown_count = 1
+        while (
+            f"solution_game_unknown{unknown_count}_{current_algorithm.replace('*', '')}.txt"
+            in existing_files
+        ):
+            unknown_count += 1
+        game_number = f"unknown{unknown_count}"
 
-    filename = f"solution_game_{game_number}.txt"
+    os.makedirs("solutions", exist_ok=True)
+
+    algorithm = current_algorithm.replace("*", "")
+    filename = f"solutions/solution_game_{game_number}_{algorithm}.txt"
 
     try:
         with open(filename, "w", encoding="utf-8") as file:
+            # Write the initial game state at the top of the file if available
+            if initial_game:
+                # Get the maximum depth of any cascade
+                max_depth = max(len(cascade) for cascade in initial_game.cascades)
+
+                # Create a transposed representation of the cascades
+                for row_idx in range(max_depth):
+                    row = []
+                    for cascade in initial_game.cascades:
+                        if row_idx < len(cascade):
+                            card = cascade[row_idx]
+                            ranks = {1: "A", 11: "J", 12: "Q", 13: "K"}
+                            rank_str = ranks.get(card.rank, str(card.rank))
+                            suit_symbols = {"H": "♥", "D": "♦", "C": "♣", "S": "♠"}
+                            row.append(f"{rank_str}{suit_symbols[card.suit]}")
+                        else:
+                            row.append("")
+                    file.write("\t".join(row) + "\n")
+
+                file.write("\n\n")
+
+            # Write solution information
             file.write(f"Solution for Game {game_number}\n")
             file.write("=" * 50 + "\n\n")
 
@@ -1154,11 +1371,18 @@ def save_solution_to_file(game_number, solution, metrics):
             file.write("Performance Metrics:\n")
             file.write("-" * 50 + "\n")
             file.write(f"Time taken: {elapsed_time:.2f} seconds\n")
+            file.write(f"Memory used:{metrics.memory_used:.2f} MB\n")
+            file.write(f"Average memory::{metrics.avg_memory:.2f} MB\n")
+            file.write(f"Peak memory usage: {metrics.max_memory:.2f} MB\n")
             file.write(f"States explored: {metrics.states_explored}\n")
             file.write(f"States generated: {metrics.states_generated}\n")
+            file.write(
+                f"States per second: {metrics.states_explored / elapsed_time:.2f}\n"
+            )
             file.write(f"Maximum queue size: {metrics.max_queue_size}\n")
             file.write(f"Maximum depth reached: {metrics.max_depth_reached}\n")
-            file.write(f"Solution length: {len(solution)}\n\n")
+            file.write(f"Solution length: {len(solution)}\n")
+            file.write(f"Peak memory usage:{metrics.max_memory:.2f} MB\n\n")
 
             # Write solution moves
             file.write("Solution Moves:\n")
@@ -1174,92 +1398,20 @@ def save_solution_to_file(game_number, solution, metrics):
 
 
 def format_move(move):
-    """Format a move into a human-readable string."""
     move_type, source_type, source_idx, dest = move[0], move[1], move[2], move[3]
-
     if move_type == "supermove":
         num_cards = move[4]
         return f"Move {num_cards} cards from Cascade {source_idx + 1} to Cascade {dest + 1}"
-
     if source_type == "cascade":
         source_desc = f"Cascade {source_idx + 1}"
-    else:  # free_cell
+    else:
         source_desc = f"Free Cell {source_idx + 1}"
-
     if move_type == "foundation":
         return f"Move card from {source_desc} to {dest} Foundation"
     elif move_type == "free_cell":
         return f"Move card from {source_desc} to Free Cell {dest + 1}"
-    else:  # cascade
+    else:
         return f"Move card from {source_desc} to Cascade {dest + 1}"
-
-
-def test_auto_move():
-    """
-    Create a test game with a specific layout to test auto-move functionality
-    """
-    game = FreeCellGame()
-
-    # Clear the game state
-    game.cascades = [[] for _ in range(8)]
-    game.free_cells = [None] * 4
-    game.foundations = {"H": [], "D": [], "C": [], "S": []}
-
-    # Add some aces to cascades - these should be auto-moved
-    game.cascades[0].append(Card("H", 1))  # Hearts Ace
-    game.cascades[1].append(Card("D", 1))  # Diamonds Ace
-
-    # Add some twos - these should not be auto-moved yet
-    game.cascades[2].append(Card("H", 2))  # Hearts 2
-    game.cascades[3].append(Card("D", 2))  # Diamonds 2
-
-    # Add cards to free cells
-    game.free_cells[0] = Card("C", 1)  # Clubs Ace - should be auto-moved
-    game.free_cells[1] = Card("S", 1)  # Spades Ace - should be auto-moved
-
-    # Test the auto-move functionality
-    auto_moves = game.auto_move_to_foundation()
-    print(f"Auto-moved {auto_moves} cards - should be 4 aces")
-
-    # Check which cards are now in foundations
-    for suit in ["H", "D", "C", "S"]:
-        print(f"{suit} foundation: {[str(card) for card in game.foundations[suit]]}")
-
-    # Now the twos should be auto-moved
-    auto_moves = game.auto_move_to_foundation()
-    print(f"Auto-moved {auto_moves} more cards - should be 2 twos")
-
-    # Check foundations again
-    for suit in ["H", "D", "C", "S"]:
-        print(f"{suit} foundation: {[str(card) for card in game.foundations[suit]]}")
-
-    # Add a three of hearts - this should be auto-moved because hearts 2 is on foundation
-    game.cascades[4].append(Card("H", 3))
-    auto_moves = game.auto_move_to_foundation()
-    print(f"Auto-moved {auto_moves} more cards - should be 1 (hearts 3)")
-
-    # Check foundations
-    for suit in ["H", "D", "C", "S"]:
-        print(f"{suit} foundation: {[str(card) for card in game.foundations[suit]]}")
-
-    # Add a four of hearts and three of clubs (should not auto-move clubs 3 yet)
-    game.cascades[5].append(Card("H", 4))
-    game.cascades[6].append(Card("C", 3))
-    auto_moves = game.auto_move_to_foundation()
-    print(f"Auto-moved {auto_moves} more cards - should be 1 (hearts 4)")
-
-    # Now add clubs 2 to foundation manually and see if clubs 3 gets auto-moved
-    game.foundations["C"].append(Card("C", 2))
-    auto_moves = game.auto_move_to_foundation()
-    print(f"Auto-moved {auto_moves} more cards - should be 1 (clubs 3)")
-
-    # Final foundation state
-    for suit in ["H", "D", "C", "S"]:
-        print(
-            f"Final {suit} foundation: {[str(card) for card in game.foundations[suit]]}"
-        )
-
-    return game
 
 
 def solve_freecell_astar(game):
@@ -1268,7 +1420,7 @@ def solve_freecell_astar(game):
     queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 150000
+    max_states = 300000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1280,10 +1432,7 @@ def solve_freecell_astar(game):
             return moves, metrics
         for move in current_game.get_valid_moves():
             new_game = FreeCellGame(current_game)
-            # Make the move and any resulting auto-moves
             new_game.make_move(move)
-            new_game.auto_move_to_foundation()
-
             metrics.states_generated += 1
             new_hash = hash(new_game)
             if new_hash in visited:
@@ -1306,83 +1455,67 @@ def solve_freecell_astar(game):
 def solve_freecell_weighted_astar(game, weight=1.5):
     metrics = PerformanceMetrics()
     metrics.start()
-
-    # Priority queue for WA* search - f(n) = g(n) + w * h(n)
     queue = [(game.heuristic3() * weight, id(game), game, [])]
     heapq.heapify(queue)
-
-    # Set to keep track of visited states
     visited = set()
     visited.add(hash(game))
-
-    # Maximum number of states to explore
-    max_states = 15000000
+    max_states = 300000
     metrics.states_explored = 0
-    metrics.states_generated = 1  # Count initial state
-    metrics.max_queue_size = 1  # Initial queue size
+    metrics.states_generated = 1
+    metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
         _, _, current_game, moves = heapq.heappop(queue)
         metrics.states_explored += 1
-
-        # Update max depth
         metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
-
-        # Check if the game is solved
         if current_game.is_solved():
             metrics.stop(moves)
             return moves, metrics
-
-        # Get all valid moves from the current state
         valid_moves = current_game.get_valid_moves()
-
         for move in valid_moves:
-            # Create a new game state by making the move
             new_game = FreeCellGame(current_game)
-            # Make the move and any resulting auto-moves
             new_game.make_move(move)
-            new_game.auto_move_to_foundation()
-
             metrics.states_generated += 1
-
-            # Skip if we've seen this state before
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
-
-            # Add the new state to the queue
-            new_moves = moves + [move]
-            # WA* uses f(n) = g(n) + w * h(n) for sorting
             heapq.heappush(
                 queue,
                 (
-                    len(new_moves) + weight * new_game.heuristic3(),
+                    len(moves) + 1 + weight * new_game.heuristic3(),
                     id(new_game),
                     new_game,
-                    new_moves,
+                    moves + [move],
                 ),
             )
             visited.add(new_hash)
-
-            # Update max queue size
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
-
     metrics.stop()
-    return None, metrics  # No solution found within constraints
+    return None, metrics
 
 
 def get_hint(game):
-    moves, _ = solve_freecell_astar(game)
+    global current_algorithm
+    algo_map = {
+        "A*": "astar",
+        "Greedy": "greedy",
+        "BFS": "bfs",
+        "DFS": "dfs",
+        "IDS": "ids",
+        "WA*": "weighted_astar",
+    }
+    algo_key = algo_map.get(current_algorithm, "astar")
+    moves, _ = solve_freecell(game, algo_key)
     return moves[0] if moves else None
 
 
-def solve_freecell_bestfirst(game):
+def solve_freecell_greedy(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic(), id(game), game, [])]
+    queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 15000
+    max_states = 300000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1394,16 +1527,13 @@ def solve_freecell_bestfirst(game):
             return moves, metrics
         for move in current_game.get_valid_moves():
             new_game = FreeCellGame(current_game)
-            # Make the move and any resulting auto-moves
             new_game.make_move(move)
-            new_game.auto_move_to_foundation()
-
             metrics.states_generated += 1
             new_hash = hash(new_game)
             if new_hash in visited:
                 continue
             heapq.heappush(
-                queue, (new_game.heuristic(), id(new_game), new_game, moves + [move])
+                queue, (new_game.heuristic3(), id(new_game), new_game, moves + [move])
             )
             visited.add(new_hash)
             metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
@@ -1416,7 +1546,7 @@ def solve_freecell_bfs(game):
     metrics.start()
     queue = deque([(game, [])])
     visited = {hash(game)}
-    max_states = 15000
+    max_states = 300000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1428,10 +1558,7 @@ def solve_freecell_bfs(game):
             return moves, metrics
         for move in current_game.get_valid_moves():
             new_game = FreeCellGame(current_game)
-            # Make the move and any resulting auto-moves
             new_game.make_move(move)
-            new_game.auto_move_to_foundation()
-
             metrics.states_generated += 1
             new_hash = hash(new_game)
             if new_hash in visited:
@@ -1448,8 +1575,8 @@ def solve_freecell_dfs(game):
     metrics.start()
     stack = [(game, [])]
     visited = {hash(game)}
-    max_states = 15000
-    max_depth = 50
+    max_states = 30000
+    max_depth = 150
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while stack and metrics.states_explored < max_states:
@@ -1463,10 +1590,7 @@ def solve_freecell_dfs(game):
             return moves, metrics
         for move in reversed(current_game.get_valid_moves()):
             new_game = FreeCellGame(current_game)
-            # Make the move and any resulting auto-moves
             new_game.make_move(move)
-            new_game.auto_move_to_foundation()
-
             metrics.states_generated += 1
             new_hash = hash(new_game)
             if new_hash in visited:
@@ -1479,21 +1603,19 @@ def solve_freecell_dfs(game):
 
 
 def solve_freecell_ids(game):
-    # Initialize performance metrics to track execution details
     metrics = PerformanceMetrics()
     metrics.start()
-    max_states = 150000  # Maximum number of states to explore before stopping
-    max_depth = 50  # Maximum depth limit for iterative deepening
+    max_states = 300000
+    max_depth = 200
 
-    # Iteratively increase the depth limit
     for depth_limit in range(max_depth + 1):
-        stack = [(game, [], 0)]  # Stack for DFS with (game state, move history, depth)
-        visited = set()  # Set to track visited game states
-        local_metrics = PerformanceMetrics()  # Metrics for the current depth iteration
+        stack = [(game, [], 0)]
+        visited = set()
+        local_metrics = PerformanceMetrics()
         local_metrics.states_explored = local_metrics.states_generated = (
             local_metrics.max_queue_size
         ) = 1
-        depth_reached = False  # Flag to indicate if depth limit was reached
+        depth_reached = False
 
         while stack and local_metrics.states_explored < max_states:
             current_game, moves, depth = stack.pop()
@@ -1501,52 +1623,31 @@ def solve_freecell_ids(game):
             local_metrics.max_depth_reached = max(
                 local_metrics.max_depth_reached, depth
             )
-
-            # Check if the game is solved
+            if depth >= depth_limit:
+                depth_reached = True
+                continue
             if current_game.is_solved():
                 metrics.stop(moves)
                 return moves, metrics
-
-            # If the current depth limit is reached, mark the flag but continue exploring other nodes
-            if depth >= depth_limit:
-                depth_reached = True
-                continue  # Ensures we backtrack instead of expanding further
-
-            # Explore valid moves from the current game state
-            for move in reversed(
-                current_game.get_valid_moves()
-            ):  # Reverse order for better DFS behavior
-                new_game = FreeCellGame(current_game)  # Create a new game state
-                # Make the move and any resulting auto-moves
+            for move in reversed(current_game.get_valid_moves()):
+                new_game = FreeCellGame(current_game)
                 new_game.make_move(move)
-                new_game.auto_move_to_foundation()
-
                 new_hash = hash(new_game)
-
-                # Skip already visited states to avoid loops
                 if new_hash in visited:
                     continue
-
-                stack.append(
-                    (new_game, moves + [move], depth + 1)
-                )  # Push new state to stack
-                visited.add(new_hash)  # Mark state as visited
+                stack.append((new_game, moves + [move], depth + 1))
+                visited.add(new_hash)
                 local_metrics.states_generated += 1
                 local_metrics.max_queue_size = max(
                     local_metrics.max_queue_size, len(stack)
                 )
-
-        # Aggregate performance metrics across depth iterations
         metrics.states_explored += local_metrics.states_explored
         metrics.states_generated += local_metrics.states_generated
         metrics.max_queue_size = max(
             metrics.max_queue_size, local_metrics.max_queue_size
         )
-
-        # If no deeper states were encountered, stop searching
         if not depth_reached:
             break
-
     metrics.stop()
     return None, metrics
 
@@ -1554,7 +1655,7 @@ def solve_freecell_ids(game):
 def solve_freecell(game, algorithm="astar"):
     return {
         "astar": solve_freecell_astar,
-        "bestfirst": solve_freecell_bestfirst,
+        "greedy": solve_freecell_greedy,
         "bfs": solve_freecell_bfs,
         "dfs": solve_freecell_dfs,
         "ids": solve_freecell_ids,
@@ -1563,24 +1664,7 @@ def solve_freecell(game, algorithm="astar"):
 
 
 def main():
-    global \
-        animation_delay, \
-        paused, \
-        game_timer, \
-        player_mode, \
-        selected_card, \
-        selected_source, \
-        selected_sequence, \
-        selected_sequence_source, \
-        solving, \
-        hint_move, \
-        last_moved_card, \
-        search_active, \
-        search_text, \
-        current_game_number, \
-        auto_move_enabled, \
-        auto_move_count, \
-        auto_move_display_time
+    global animation_delay, paused, game_timer, player_mode, selected_card, selected_source, selected_sequence, selected_sequence_source, solving, hint_move, last_moved_card, search_active, search_text, current_game_number, current_algorithm, auto_moves_enabled, initial_game  # Added initial_game to globals
 
     deck_size = 52
     game = FreeCellGame(deck_size=deck_size)
@@ -1593,25 +1677,22 @@ def main():
     last_move_time = 0
     game_timer = 0.0
     start_time = time.time()
-    algorithms = ["A*", "Best-First", "BFS", "DFS", "IDS", "WA*"]
+    algorithms = ["A*", "Greedy", "BFS", "DFS", "IDS", "WA*"]
     algorithm_index = 0
     hint_move = None
     last_moved_card = None
     current_game_number = None
-    auto_move_enabled = True
-    auto_move_count = 0
-    auto_move_display_time = 0
+    auto_moves_enabled = False  # Start with automoves disabled
+    initial_game = None  # Initialize initial_game variable
 
-    # Initialize supermove selection variables
     selected_sequence = None
     selected_sequence_source = None
 
-    # Search functionality
     search_active = False
     search_text = ""
     search_box_rect = pygame.Rect(50, SCREEN_HEIGHT - 60, 120, 30)
+    load_button_rect = pygame.Rect(180, SCREEN_HEIGHT - 60, 60, 30)
 
-    # Make sure the games directory exists
     os.makedirs("games", exist_ok=True)
 
     while True:
@@ -1639,11 +1720,11 @@ def main():
                                 selected_sequence = selected_sequence_source = None
                                 start_time = time.time()
                                 game_timer = 0.0
+                                initial_game = None
                                 print(f"Loaded game {game_number}")
                             search_text = ""
                             search_active = False
                         except ValueError:
-                            # Invalid number entered
                             search_text = ""
                     elif event.key == pygame.K_BACKSPACE:
                         search_text = search_text[:-1]
@@ -1651,7 +1732,6 @@ def main():
                         search_active = False
                         search_text = ""
                     else:
-                        # Only add digits to limit to numbers
                         if event.unicode.isdigit() and len(search_text) < 10:
                             search_text += event.unicode
                 else:
@@ -1667,35 +1747,52 @@ def main():
                         start_time = time.time()
                         game_timer = 0.0
                         current_game_number = None
+                        initial_game = None
                     elif (
                         event.key == pygame.K_s
                         and solution
                         and solution_index < len(solution)
                     ):
                         game.make_move(solution[solution_index])
-                        auto_move_count = game.auto_move_to_foundation()
-                        if auto_move_count > 0:
-                            auto_move_display_time = current_time
                         solution_index += 1
+                    elif (
+                        event.key == pygame.K_b
+                        and solution
+                        and solution_index > 0
+                        and initial_game is not None
+                    ):
+                        solution_index -= 1
+                        game = FreeCellGame(initial_game)
+                        for i in range(solution_index):
+                            game.make_move(solution[i])
                     elif event.key == pygame.K_EQUALS or event.key == pygame.K_PLUS:
                         animation_delay = max(0.1, animation_delay - 0.1)
                     elif event.key == pygame.K_MINUS:
                         animation_delay = min(2.0, animation_delay + 0.1)
-                    elif event.key == pygame.K_t:  # Test auto-move feature
-                        game = test_auto_move()
-                        player_mode = True
-                        solving = False
-                        stats = hint_move = last_moved_card = None
-                        selected_sequence = selected_sequence_source = None
-                        start_time = time.time()
-                        game_timer = 0.0
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = pygame.mouse.get_pos()
-
-                # Check if search box was clicked
                 if search_box_rect.collidepoint((x, y)):
                     search_active = True
+                elif load_button_rect.collidepoint((x, y)):
+                    try:
+                        game_number = int(search_text)
+                        new_game = load_game_from_file(game_number)
+                        if new_game:
+                            game = new_game
+                            solution = None
+                            solution_index = 0
+                            solving = player_mode = False
+                            stats = hint_move = last_moved_card = None
+                            selected_sequence = selected_sequence_source = None
+                            start_time = time.time()
+                            game_timer = 0.0
+                            initial_game = None
+                            print(f"Loaded game {game_number}")
+                        search_text = ""
+                        search_active = False
+                    except ValueError:
+                        search_text = ""
                 else:
                     if 0 <= y <= 60:
                         if 120 <= x <= 270 and 15 <= y <= 45:
@@ -1713,7 +1810,7 @@ def main():
                             paused = False
                             algo_map = {
                                 "A*": "astar",
-                                "Best-First": "bestfirst",
+                                "Greedy": "greedy",
                                 "BFS": "bfs",
                                 "DFS": "dfs",
                                 "IDS": "ids",
@@ -1721,31 +1818,53 @@ def main():
                             }
                             algo_key = algo_map.get(current_algorithm, "astar")
                             print(f"Using algorithm: {algo_key}")
-                            solution_data, metrics = solve_freecell(game, algo_key)
-                            solution = solution_data
-                            solution_index = 0
-                            hint_move = last_moved_card = (
-                                None  # Clear hint and last moved card
-                            )
-                            selected_sequence = selected_sequence_source = None
 
-                            if solution:
-                                print(
-                                    f"{current_algorithm} solution found with {len(solution)} moves!"
-                                )
-                                metrics.print_report(f"{current_algorithm}")
-                                stats = (solution, metrics.states_explored)
+                            # Create a deep copy of the initial game state before solving
+                            initial_game = FreeCellGame(game)
 
-                                # Save solution to file
-                                save_solution_to_file(
-                                    current_game_number, solution, metrics
-                                )
-                            else:
-                                print(f"No {current_algorithm} solution found.")
-                                metrics.print_report(
-                                    f"{current_algorithm} (No Solution)"
-                                )
-                                solving = False
+                            # Create a wrapper for solving with automoves
+                            original_get_valid_moves = FreeCellGame.get_valid_moves
+
+                            def automove_wrapper(self):
+                                """Wrapper that applies automoves logic using original method to avoid recursion"""
+                                auto_moves = self.get_automatic_foundation_moves()
+                                if auto_moves:
+                                    return auto_moves
+                                return original_get_valid_moves(self)
+
+                            # Replace get_valid_moves with our wrapper
+                            FreeCellGame.get_valid_moves = automove_wrapper
+
+                            try:
+                                solution_data, metrics = solve_freecell(game, algo_key)
+                                solution = solution_data
+                                solution_index = 0
+                                hint_move = last_moved_card = None
+                                selected_sequence = selected_sequence_source = None
+
+                                if solution:
+                                    print(
+                                        f"{current_algorithm} solution found with {len(solution)} moves!"
+                                    )
+                                    metrics.print_report(f"{current_algorithm}")
+                                    stats = (solution, metrics.states_explored)
+                                    save_solution_to_file(
+                                        current_game_number,
+                                        solution,
+                                        metrics,
+                                        current_algorithm,
+                                        initial_game,
+                                    )
+                                else:
+                                    print(f"No {current_algorithm} solution found.")
+                                    metrics.print_report(
+                                        f"{current_algorithm} (No Solution)"
+                                    )
+                                    solving = False
+                            finally:
+                                # Restore the original method
+                                FreeCellGame.get_valid_moves = original_get_valid_moves
+
                         elif 410 <= x <= 530 and 15 <= y <= 45:
                             game = FreeCellGame(deck_size=deck_size)
                             solution = None
@@ -1756,6 +1875,7 @@ def main():
                             start_time = time.time()
                             game_timer = 0.0
                             current_game_number = None
+                            initial_game = None
                         elif 540 <= x <= 680 and 15 <= y <= 45:
                             deck_size = (
                                 52 if 540 <= x <= 560 else 28 if 600 <= x <= 620 else 12
@@ -1769,12 +1889,12 @@ def main():
                             start_time = time.time()
                             game_timer = 0.0
                             current_game_number = None
-                        # difficulty setting
+                            initial_game = None
                         elif 750 <= x <= 1120 and 15 <= y <= 45:
                             difficulty = (
                                 "easy"
                                 if 750 <= x <= 820
-                                else "medium"
+                                else "hard"
                                 if 830 <= x <= 900
                                 else "hard"
                             )
@@ -1789,6 +1909,18 @@ def main():
                             start_time = time.time()
                             game_timer = 0.0
                             current_game_number = None
+                            initial_game = None
+                    elif (
+                        SCREEN_WIDTH - 340 <= x <= SCREEN_WIDTH - 240
+                        and SCREEN_HEIGHT - 60 <= y <= SCREEN_HEIGHT - 20
+                        and solution
+                        and solution_index > 0
+                        and initial_game is not None
+                    ):
+                        solution_index -= 1
+                        game = FreeCellGame(initial_game)
+                        for i in range(solution_index):
+                            game.make_move(solution[i])
                     elif (
                         SCREEN_WIDTH - 230 <= x <= SCREEN_WIDTH - 130
                         and SCREEN_HEIGHT - 60 <= y <= SCREEN_HEIGHT - 20
@@ -1805,9 +1937,6 @@ def main():
                         and solution_index < len(solution)
                     ):
                         game.make_move(solution[solution_index])
-                        auto_move_count = game.auto_move_to_foundation()
-                        if auto_move_count > 0:
-                            auto_move_display_time = current_time
                         solution_index += 1
                     elif (
                         not solving
@@ -1821,6 +1950,14 @@ def main():
                         stats = hint_move = last_moved_card = None
                         selected_sequence = selected_sequence_source = None
                     elif (
+                        not solving
+                        and not player_mode
+                        and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 20
+                        and 290 <= y <= 320
+                    ):
+                        # Toggle auto moves for solver
+                        auto_moves_enabled = not auto_moves_enabled
+                    elif (
                         player_mode
                         and not solving
                         and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 50
@@ -1828,10 +1965,23 @@ def main():
                         and not (game.is_solved() or not game.get_valid_moves())
                     ):
                         hint_move = get_hint(game)
+                    elif (
+                        player_mode
+                        and not solving
+                        and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 50
+                        and 290 <= y <= 320
+                        and game.player_moves
+                    ):  # Undo button click area
+                        game.undo_last_move()
+                    elif (
+                        player_mode
+                        and not solving
+                        and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 50
+                        and 330 <= y <= 360
+                    ):  # Auto On/Off button click area
+                        auto_moves_enabled = not auto_moves_enabled
                     elif player_mode and not solving:
                         game.handle_click(x, y)
-
-                    # Deactivate search when clicking elsewhere
                     if not search_box_rect.collidepoint((x, y)):
                         search_active = False
 
@@ -1842,32 +1992,22 @@ def main():
                     highlight_move=highlight_move,
                     stats=stats,
                     algorithm=current_algorithm,
+                    solution_index=solution_index,
                 )
                 pygame.display.flip()
                 time.sleep(0.2)
                 game.make_move(highlight_move)
-                auto_move_count = game.auto_move_to_foundation()
-                if auto_move_count > 0:
-                    auto_move_display_time = current_time
                 solution_index += 1
                 last_move_time = current_time
                 if solution_index >= len(solution):
                     solving = False
         else:
-            # Display auto-move notification if recent auto-moves happened
-            if current_time - auto_move_display_time < 2.0:  # Show for 2 seconds
-                game.draw(
-                    stats=stats,
-                    algorithm=current_algorithm,
-                    hint_move=hint_move if player_mode and not solving else None,
-                    auto_moves=auto_move_count,
-                )
-            else:
-                game.draw(
-                    stats=stats,
-                    algorithm=current_algorithm,
-                    hint_move=hint_move if player_mode and not solving else None,
-                )
+            game.draw(
+                stats=stats,
+                algorithm=current_algorithm,
+                hint_move=hint_move if player_mode and not solving else None,
+                solution_index=solution_index,
+            )
 
         clock.tick(60)
 

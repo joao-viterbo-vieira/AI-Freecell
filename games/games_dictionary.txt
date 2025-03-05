@@ -1,0 +1,17 @@
+website: https://freecellgamesolutions.com/stats.html
+
+Game - Dificulty/Length of solution
+
+Length of solution
+game10913.txt - 19 moves
+game3148.txt - 20 moves 
+game1187.txt - 21 moves
+game5087.txt - 50 moves
+
+Easy Games
+game9998.txt - easy
+game164.txt - easy
+
+Hard Games
+game169.txt - hard
+game29596.txt - hard/ 53 moves
