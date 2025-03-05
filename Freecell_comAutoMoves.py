@@ -1498,7 +1498,7 @@ def get_hint(game):
     global current_algorithm
     algo_map = {
         "A*": "astar",
-        "Best-First": "bestfirst",
+        "Greedy": "greedy",
         "BFS": "bfs",
         "DFS": "dfs",
         "IDS": "ids",
@@ -1509,7 +1509,7 @@ def get_hint(game):
     return moves[0] if moves else None
 
 
-def solve_freecell_bestfirst(game):
+def solve_freecell_greedy(game):
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.heuristic3(), id(game), game, [])]
@@ -1655,7 +1655,7 @@ def solve_freecell_ids(game):
 def solve_freecell(game, algorithm="astar"):
     return {
         "astar": solve_freecell_astar,
-        "bestfirst": solve_freecell_bestfirst,
+        "greedy": solve_freecell_greedy,
         "bfs": solve_freecell_bfs,
         "dfs": solve_freecell_dfs,
         "ids": solve_freecell_ids,
@@ -1677,7 +1677,7 @@ def main():
     last_move_time = 0
     game_timer = 0.0
     start_time = time.time()
-    algorithms = ["A*", "Best-First", "BFS", "DFS", "IDS", "WA*"]
+    algorithms = ["A*", "Greedy", "BFS", "DFS", "IDS", "WA*"]
     algorithm_index = 0
     hint_move = None
     last_moved_card = None
@@ -1810,7 +1810,7 @@ def main():
                             paused = False
                             algo_map = {
                                 "A*": "astar",
-                                "Best-First": "bestfirst",
+                                "Greedy": "greedy",
                                 "BFS": "bfs",
                                 "DFS": "dfs",
                                 "IDS": "ids",
