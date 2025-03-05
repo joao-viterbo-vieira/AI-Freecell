@@ -1165,11 +1165,11 @@ class FreeCellGame:
             if auto_moves_enabled:
                 pygame.draw.rect(screen, LIGHT_GREEN, solver_auto_rect)
                 pygame.draw.rect(screen, BLACK, solver_auto_rect, 1)
-                auto_text = small_font.render("Solver Auto", True, BLACK)
+                auto_text = small_font.render("AutoMove On", True, BLACK)
             else:
                 pygame.draw.rect(screen, LIGHT_RED, solver_auto_rect)
                 pygame.draw.rect(screen, BLACK, solver_auto_rect, 1)
-                auto_text = small_font.render("Solver Manual", True, BLACK)
+                auto_text = small_font.render("AutoMove off", True, BLACK)
             screen.blit(auto_text, (button_pos_x + 10, button_pos_y + 45))
 
         elif player_mode and not solving and not game_ended:
