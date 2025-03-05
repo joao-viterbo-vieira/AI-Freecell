@@ -13,16 +13,16 @@ Solution for Game 164
 Performance Metrics:
 --------------------------------------------------
 Time taken: 0.78 seconds
-Memory used:27.00 MB
-Average memory::157.92 MB
-Peak memory usage: 171.41 MB
-States explored: 3590
-States generated: 21720
-States per second: 4588.05
-Maximum queue size: 12320
+Memory used:27.23 MB
+Average memory::159.26 MB
+Peak memory usage: 172.88 MB
+States explored: 3596
+States generated: 21755
+States per second: 4619.93
+Maximum queue size: 12338
 Maximum depth reached: 93
 Solution length: 93
-Peak memory usage:171.41 MB
+Peak memory usage:172.88 MB
 
 Solution Moves:
 --------------------------------------------------
