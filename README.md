@@ -118,7 +118,7 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 ### Breadth-First Search (BFS)
 - Explores all nodes at current depth before moving deeper
 - Guarantees shortest solution but memory intensive
-- Best for short, simple games
+
 
 ### Depth-First Search (DFS)
 - Explores branches as far as possible before backtracking
