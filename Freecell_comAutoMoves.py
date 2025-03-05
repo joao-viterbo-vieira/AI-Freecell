@@ -1420,7 +1420,7 @@ def solve_freecell_astar(game):
     queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 1000000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1441,6 +1441,120 @@ def solve_freecell_astar(game):
                 queue,
                 (
                     new_game.heuristic3() + len(moves) + 1,
+                    id(new_game),
+                    new_game,
+                    moves + [move],
+                ),
+            )
+            visited.add(new_hash)
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+    metrics.stop()
+    return None, metrics
+
+
+def solve_freecell_astar2(game):
+    metrics = PerformanceMetrics()
+    metrics.start()
+    queue = [(game.heuristic2(), id(game), game, [])]
+    heapq.heapify(queue)
+    visited = {hash(game)}
+    max_states = 1000000
+    metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+        for move in current_game.get_valid_moves():
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+            heapq.heappush(
+                queue,
+                (
+                    new_game.heuristic2() + len(moves) + 1,
+                    id(new_game),
+                    new_game,
+                    moves + [move],
+                ),
+            )
+            visited.add(new_hash)
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+    metrics.stop()
+    return None, metrics
+
+
+def solve_freecell_astar3(game):
+    metrics = PerformanceMetrics()
+    metrics.start()
+    queue = [(game.heuristic1(), id(game), game, [])]
+    heapq.heapify(queue)
+    visited = {hash(game)}
+    max_states = 1000000
+    metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+        for move in current_game.get_valid_moves():
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+            heapq.heappush(
+                queue,
+                (
+                    new_game.heuristic1() + len(moves) + 1,
+                    id(new_game),
+                    new_game,
+                    moves + [move],
+                ),
+            )
+            visited.add(new_hash)
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+    metrics.stop()
+    return None, metrics
+
+
+def solve_freecell_metaheuristic(game):
+    metrics = PerformanceMetrics()
+    metrics.start()
+    queue = [(game.meta_heuristic(), id(game), game, [])]
+    heapq.heapify(queue)
+    visited = {hash(game)}
+    max_states = 1000000
+    metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+        for move in current_game.get_valid_moves():
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+            heapq.heappush(
+                queue,
+                (
+                    new_game.meta_heuristic() + len(moves) + 1,
                     id(new_game),
                     new_game,
                     moves + [move],
@@ -1503,6 +1617,9 @@ def get_hint(game):
         "DFS": "dfs",
         "IDS": "ids",
         "WA*": "weighted_astar",
+        "Meta": "metaheuristic",
+        "A* Heu2": "astar2",
+        "A* Heu3": "astar3",
     }
     algo_key = algo_map.get(current_algorithm, "astar")
     moves, _ = solve_freecell(game, algo_key)
@@ -1660,6 +1777,9 @@ def solve_freecell(game, algorithm="astar"):
         "dfs": solve_freecell_dfs,
         "ids": solve_freecell_ids,
         "weighted_astar": solve_freecell_weighted_astar,
+        "metaheuristic": solve_freecell_metaheuristic,
+        "astar2": solve_freecell_astar2,
+        "astar3": solve_freecell_astar3,
     }.get(algorithm, solve_freecell_astar)(game)
 
 
@@ -1677,7 +1797,17 @@ def main():
     last_move_time = 0
     game_timer = 0.0
     start_time = time.time()
-    algorithms = ["A*", "Greedy", "BFS", "DFS", "IDS", "WA*"]
+    algorithms = [
+        "A*",
+        "Greedy",
+        "BFS",
+        "DFS",
+        "IDS",
+        "WA*",
+        "Meta",
+        "A* Heu2",
+        "A* Heu3",
+    ]
     algorithm_index = 0
     hint_move = None
     last_moved_card = None
@@ -1815,6 +1945,9 @@ def main():
                                 "DFS": "dfs",
                                 "IDS": "ids",
                                 "WA*": "weighted_astar",
+                                "Meta": "metaheuristic",
+                                "A* Heu2": "astar2",
+                                "A* Heu3": "astar3",
                             }
                             algo_key = algo_map.get(current_algorithm, "astar")
                             print(f"Using algorithm: {algo_key}")
