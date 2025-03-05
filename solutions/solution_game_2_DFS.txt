@@ -1,0 +1,37 @@
+A♥	3♥	2♥	A♦	A♣	A♠	3♠	3♦
+2♦	2♠	2♣	3♣				
+
+
+Solution for Game 2
+==================================================
+
+Performance Metrics:
+--------------------------------------------------
+Time taken: 0.01 seconds
+Memory used:0.01 MB
+Average memory::63.39 MB
+Peak memory usage: 1910.08 MB
+States explored: 16
+States generated: 197
+States per second: 1722.86
+Maximum queue size: 178
+Maximum depth reached: 14
+Solution length: 14
+Peak memory usage:1910.08 MB
+
+Solution Moves:
+--------------------------------------------------
+Move 1: Move card from Cascade 5 to C Foundation
+Move 2: Move card from Cascade 6 to S Foundation
+Move 3: Move card from Cascade 1 to Free Cell 1
+Move 4: Move card from Cascade 1 to H Foundation
+Move 5: Move card from Cascade 2 to S Foundation
+Move 6: Move card from Cascade 2 to Free Cell 2
+Move 7: Move card from Cascade 3 to C Foundation
+Move 8: Move card from Cascade 3 to H Foundation
+Move 9: Move card from Cascade 4 to C Foundation
+Move 10: Move card from Cascade 4 to D Foundation
+Move 11: Move card from Free Cell 1 to D Foundation
+Move 12: Move card from Cascade 7 to S Foundation
+Move 13: Move card from Cascade 8 to D Foundation
+Move 14: Move card from Free Cell 2 to H Foundation

@@ -1546,7 +1546,7 @@ def solve_freecell_bfs(game):
     metrics.start()
     queue = deque([(game, [])])
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 200000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1575,8 +1575,8 @@ def solve_freecell_dfs(game):
     metrics.start()
     stack = [(game, [])]
     visited = {hash(game)}
-    max_states = 30000
-    max_depth = 150
+    max_states = 200000 
+    max_depth = 100
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while stack and metrics.states_explored < max_states:
@@ -1605,8 +1605,8 @@ def solve_freecell_dfs(game):
 def solve_freecell_ids(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    max_states = 300000
-    max_depth = 200
+    max_states = 200000
+    max_depth = 150
 
     for depth_limit in range(max_depth + 1):
         stack = [(game, [], 0)]
