@@ -249,7 +249,7 @@ A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
 2♦ 2♠ 2♣ 3♣
 ```
 
-### Results
+### Results (First try results zero-shot)
 
 | Model | Time | Moves | Success |
 |-------|------|-------|---------|
@@ -288,8 +288,8 @@ A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
    - Interestingly, longer processing time didn't always yield more efficient solutions
    - O3-mini found one of the most efficient solutions in the shortest time
 
-
-This benchmark reveals significant differences in how LLMs handle rule-based strategic planning tasks. The results suggest that specialized reasoning capabilities may be more important than overall model size for game-solving tasks like simple FreeCell games (12 cards).
+### Conclusions
+This benchmark reveals significant differences in how LLMs handle rule-based strategic planning tasks. The results suggest that specialized reasoning capabilities may be more important than overall model size for game-solving tasks like simple FreeCell games (12 cards). However, LLMs are still not reliable for this type of reasoning. While they can succeed in some simple cases if they possess reasoning capabilities and are given enough time to think, their performance varies. Repeating these tests may yield different results, but only zero-shot attempts on the first try for each task were considered.
 
 ## Designing a FreeCell LLM Agent: Architecture and Potential
 
