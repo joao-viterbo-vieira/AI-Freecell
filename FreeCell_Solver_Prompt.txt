@@ -1,0 +1,107 @@
+**Goal:**  
+Solve a FreeCell solitaire puzzle from a given card layout. Your task is to produce a valid, step-by-step solution that moves all cards to their corresponding foundations (Clubs, Diamonds, Hearts, Spades) following standard FreeCell rules.
+
+---
+
+**Input Format:**  
+The puzzle layout is provided between triple hashes (`###`) as follows:
+```
+###
+<Card from Cascade 1> <Card from Cascade 2> ... <Card from Cascade N>
+<Card from Cascade 1> <Card from Cascade 2> ... <Card from Cascade N>
+...
+###
+```
+- **Cascade Interpretation:**  
+  - The layout is read column-wise across rows.
+  - For example, given:
+    ```
+    ###
+    A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
+    2♦ 2♠ 2♣ 3♣
+    ###
+    ```
+    the cascades become:
+    - **Cascade 1:** A♥ (bottom), 2♦ (top)  
+    - **Cascade 2:** 3♥ (bottom), 2♠ (top)  
+    - **Cascade 3:** 2♥ (bottom), 2♣ (top)  
+    - **Cascade 4:** A♦ (bottom), 3♣ (top)  
+    - **Cascade 5:** A♣ (only card)  
+    - **Cascade 6:** A♠ (only card)  
+    - **Cascade 7:** 3♠ (only card)  
+    - **Cascade 8:** 3♦ (only card)  
+  - *Note:* When a cascade has more than one card, **the top card is the last card in that column.** For instance, in **Cascade 1**, the top (movable) card is **2♦**.
+
+- **Game to solve**  
+  Your task is to solve the following game:
+  ###
+  A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
+  2♦ 2♠ 2♣ 3♣
+  ###
+
+---
+
+**Output Format:**  
+List each move on a separate line in the following format:
+```
+Move 1: Move [Card] from Cascade [X] to [Destination]
+Move 2: Move [Card] from Cascade [Y] to [Destination]
+...
+```
+- **[Card]:** The card being moved (e.g., "A♥").
+- **[X] / [Y]:** The cascade number (starting from 1 from the left) from which the card is moved.
+- **[Destination]:** The target location, which can be:
+  - Another cascade (indicate the cascade number),
+  - A free cell (simply "Free Cell"),
+  - A foundation (use "C Foundation" for Clubs, "D Foundation" for Diamonds, "H Foundation" for Hearts, "S Foundation" for Spades).
+
+---
+
+**Rules & Constraints:**
+
+1. **FreeCell Rules:**
+   - **Movable Cards:** Only the top card of any cascade is movable unless free cells allow moving a group of cards (subject to standard FreeCell movement rules).
+   - **Cascades:** Build down by alternating colors.
+   - **Foundations:** Build up by suit starting from Ace.
+   - **Free Cells:** There are four free cells, all starting empty.
+
+2. **Movement Rules:**
+   - You can move one card at a time unless you have available free cells and empty cascades that allow moving multiple cards according to standard FreeCell rules.
+   - The maximum number of cards that can be moved in one move is determined by the number of empty free cells and empty cascades.
+
+3. **Error Handling:**
+   - If the puzzle layout is invalid (e.g., missing or extra cards, duplicate cards, or improper format) or if no solution exists, output a clear error message in this format:
+     ```
+     Error: Puzzle layout is invalid or unsolvable. [Explanation]
+     ```
+
+4. **Multiple Solutions:**
+   - If more than one valid solution exists, you may output any correct, complete sequence of moves.
+   - The solution must be a full sequence that adheres exactly to the output format described above.
+
+---
+
+**Example Walkthrough:**
+
+Given the example input:
+```
+###
+A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
+2♦ 2♠ 2♣ 3♣
+###
+```
+- **Cascade 1:** Contains A♥ (bottom) and 2♦ (top). The movable card is **2♦**.
+- **Cascade 2:** Contains 3♥ (bottom) and 2♠ (top); the movable card is **2♠**.
+
+A sample move might look like:
+```
+Move 1: Move A♠ from Cascade 6 to Foundation
+```
+
+---
+
+**Task:**
+
+Using the details provided above, produce a complete step-by-step solution that moves all cards from the cascades to their respective foundations following standard FreeCell rules. Your final output should only consist of the sequence of moves (or an error message if the puzzle is unsolvable), with each move formatted as specified.
+
+---

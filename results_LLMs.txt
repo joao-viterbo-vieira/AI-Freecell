@@ -1,0 +1,114 @@
+game2.txt
+A♥	3♥	2♥	A♦	A♣	A♠	3♠	3♦
+2♦	2♠	2♣	3♣	
+
+
+sonnet-3.7-extended-thinking zero shot 1m36s game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 3♣ from Cascade 4 to Free Cell
+Move 4: Move A♦ from Cascade 4 to D Foundation
+Move 5: Move 2♦ from Cascade 1 to D Foundation
+Move 6: Move A♥ from Cascade 1 to H Foundation
+Move 7: Move 2♣ from Cascade 3 to C Foundation
+Move 8: Move 2♥ from Cascade 3 to H Foundation
+Move 9: Move 2♠ from Cascade 2 to S Foundation
+Move 10: Move 3♥ from Cascade 2 to H Foundation
+Move 11: Move 3♣ from Free Cell to C Foundation
+Move 12: Move 3♠ from Cascade 7 to S Foundation
+Move 13: Move 3♦ from Cascade 8 to D Foundation
+
+
+grok3 zero shot reasoning for 70 seconds  game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 2♦ from Cascade 1 to Cascade 5
+Move 4: Move A♥ from Cascade 1 to H Foundation
+Move 5: Move 3♣ from Cascade 4 to Cascade 1
+Move 6: Move A♦ from Cascade 4 to D Foundation
+Move 7: Move 2♣ from Cascade 3 to C Foundation
+Move 8: Move 2♥ from Cascade 3 to H Foundation
+Move 9: Move 2♠ from Cascade 2 to S Foundation
+Move 10: Move 2♦ from Cascade 5 to D Foundation
+Move 11: Move 3♣ from Cascade 1 to C Foundation
+Move 12: Move 3♥ from Cascade 2 to H Foundation
+Move 13: Move 3♠ from Cascade 7 to S Foundation
+Move 14: Move 3♦ from Cascade 8 to D Foundation
+
+o3-mini-high zero shot reasoning for 1min12 game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 2♦ from Cascade 1 to Free Cell
+Move 4: Move A♥ from Cascade 1 to H Foundation
+Move 5: Move 2♣ from Cascade 3 to C Foundation
+Move 6: Move 2♥ from Cascade 3 to H Foundation
+Move 7: Move 3♣ from Cascade 4 to C Foundation
+Move 8: Move A♦ from Cascade 4 to D Foundation
+Move 9: Move 2♠ from Cascade 2 to S Foundation
+Move 10: Move 3♥ from Cascade 2 to H Foundation
+Move 11: Move 2♦ from Free Cell to D Foundation
+Move 12: Move 3♠ from Cascade 7 to S Foundation
+Move 13: Move 3♦ from Cascade 8 to D Foundation
+
+o3-mini zero shot reasoning for 20 seconds game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 2♠ from Cascade 2 to S Foundation
+Move 4: Move 2♣ from Cascade 3 to C Foundation
+Move 5: Move 3♣ from Cascade 4 to C Foundation
+Move 6: Move 3♠ from Cascade 7 to S Foundation
+Move 7: Move A♦ from Cascade 4 to D Foundation
+Move 8: Move 2♦ from Cascade 1 to D Foundation
+Move 9: Move A♥ from Cascade 1 to H Foundation
+Move 10: Move 2♥ from Cascade 3 to H Foundation
+Move 11: Move 3♥ from Cascade 2 to H Foundation
+Move 12: Move 3♦ from Cascade 8 to D Foundation
+
+o1 zero shot reasoning for 41 seconds game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 2♣ from Cascade 3 to C Foundation
+Move 4: Move 3♣ from Cascade 4 to C Foundation
+Move 5: Move A♦ from Cascade 4 to D Foundation
+Move 6: Move 2♦ from Cascade 1 to D Foundation
+Move 7: Move A♥ from Cascade 1 to H Foundation
+Move 8: Move 2♥ from Cascade 3 to H Foundation
+Move 9: Move 2♠ from Cascade 2 to S Foundation
+Move 10: Move 3♥ from Cascade 2 to H Foundation
+Move 11: Move 3♠ from Cascade 7 to S Foundation
+Move 12: Move 3♦ from Cascade 8 to D Foundation
+
+deepseek-r1 zero shot 2min58 seconds game2
+
+Move 1: Move A♣ from Cascade 5 to C Foundation
+Move 2: Move A♠ from Cascade 6 to S Foundation
+Move 3: Move 2♦ from Cascade 1 to Cascade 4
+Move 4: Move A♥ from Cascade 1 to H Foundation
+Move 5: Move 2♦ from Cascade 4 to Free Cell
+Move 6: Move 3♣ from Cascade 4 to Free Cell
+Move 7: Move A♦ from Cascade 4 to D Foundation
+Move 8: Move 2♦ from Free Cell to D Foundation
+Move 9: Move 2♠ from Cascade 2 to S Foundation
+Move 10: Move 2♣ from Cascade 3 to C Foundation
+Move 11: Move 3♠ from Cascade 7 to S Foundation
+Move 12: Move 3♦ from Cascade 8 to D Foundation
+Move 13: Move 3♣ from Free Cell to C Foundation
+Move 14: Move 2♥ from Cascade 3 to H Foundation
+Move 15: Move 3♥ from Cascade 2 to H Foundation
+
+
+
+Models that couldnt do it
+chatgpt-4o-lastest (2025-01-29)
+chatgpt-4.5-Preview
+Gemini 2.0 Flash Thinking Experimental 01-21
+Gemini 2.0 Pro Experimental 02-05
+claude3.7  (without extended thinking)
+qwen-max-2025-01-25
+llama-3.3-70b-instruct
+mistral-large-2411
