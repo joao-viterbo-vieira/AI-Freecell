@@ -1,0 +1,222 @@
+2♣	6♣	8♣	5♦	7♠	5♠	K♣	10♣
+6♠	2♥	3♦	9♥	Q♦	9♣	4♥	6♦
+K♦	Q♥	5♣	A♥	9♦	K♠	2♦	4♣
+6♥	A♣	4♦	Q♠	10♦	Q♣	5♥	J♥
+8♦	4♠	A♦	2♠	8♥	3♥	10♥	K♥
+9♠	7♥	7♦	J♠	A♠	7♣	3♠	10♠
+3♣	8♠	J♣	J♦				
+
+
+Solution for Game 4
+==================================================
+
+Performance Metrics:
+--------------------------------------------------
+Time taken: 43.56 seconds
+Memory used:43.32 MB
+Average memory::77.42 MB
+Peak memory usage: 107.82 MB
+States explored: 184650
+States generated: 669001
+States per second: 4238.74
+Maximum queue size: 10144
+Maximum depth reached: 202
+Solution length: 194
+Peak memory usage:107.82 MB
+
+Solution Moves:
+--------------------------------------------------
+Move 1: Move card from Cascade 5 to S Foundation
+Move 2: Move card from Cascade 2 to Free Cell 1
+Move 3: Move card from Cascade 7 to Free Cell 2
+Move 4: Move card from Cascade 8 to Free Cell 3
+Move 5: Move card from Cascade 2 to Free Cell 4
+Move 6: Move card from Cascade 6 to Cascade 5
+Move 7: Move card from Cascade 7 to Cascade 3
+Move 8: Move card from Cascade 2 to Cascade 7
+Move 9: Move card from Cascade 2 to C Foundation
+Move 10: Move card from Cascade 6 to Cascade 7
+Move 11: Move card from Cascade 4 to Cascade 6
+Move 12: Move card from Cascade 4 to Cascade 2
+Move 13: Move card from Cascade 3 to Cascade 2
+Move 14: Move card from Cascade 4 to S Foundation
+Move 15: Move card from Cascade 6 to Cascade 4
+Move 16: Move card from Free Cell 2 to S Foundation
+Move 17: Move card from Cascade 8 to Free Cell 2
+Move 18: Move card from Cascade 8 to Cascade 6
+Move 19: Move card from Cascade 7 to Cascade 8
+Move 20: Move card from Cascade 7 to S Foundation
+Move 21: Move card from Free Cell 3 to Cascade 4
+Move 22: Move card from Cascade 8 to Free Cell 3
+Move 23: Move card from Cascade 4 to Cascade 6
+Move 24: Move card from Cascade 8 to Cascade 7
+Move 25: Move card from Cascade 8 to Cascade 5
+Move 26: Move card from Cascade 8 to Cascade 4
+Move 27: Move card from Cascade 6 to Cascade 8
+Move 28: Move card from Free Cell 3 to Cascade 7
+Move 29: Move card from Cascade 8 to Free Cell 3
+Move 30: Move card from Free Cell 1 to Cascade 8
+Move 31: Move card from Cascade 3 to Free Cell 1
+Move 32: Move card from Cascade 3 to Cascade 8
+Move 33: Move card from Cascade 3 to D Foundation
+Move 34: Move card from Cascade 1 to Cascade 3
+Move 35: Move card from Cascade 1 to Cascade 2
+Move 36: Move card from Free Cell 3 to Cascade 6
+Move 37: Move card from Cascade 8 to Free Cell 3
+Move 38: Move card from Free Cell 4 to Cascade 8
+Move 39: Move card from Cascade 5 to Free Cell 4
+Move 40: Move card from Cascade 5 to Cascade 1
+Move 41: Move card from Cascade 5 to Cascade 2
+Move 42: Move card from Cascade 1 to Cascade 2
+Move 43: Move card from Free Cell 4 to Cascade 2
+Move 44: Move card from Cascade 5 to Free Cell 4
+Move 45: Move card from Cascade 5 to Cascade 4
+Move 46: Move card from Free Cell 1 to Cascade 5
+Move 47: Move card from Cascade 6 to Free Cell 1
+Move 48: Move card from Free Cell 4 to Cascade 5
+Move 49: Move card from Cascade 8 to Free Cell 4
+Move 50: Move card from Free Cell 1 to Cascade 6
+Move 51: Move card from Cascade 8 to Free Cell 1
+Move 52: Move card from Cascade 6 to Cascade 8
+Move 53: Move card from Cascade 4 to Cascade 8
+Move 54: Move card from Free Cell 1 to Cascade 8
+Move 55: Move card from Cascade 7 to Free Cell 1
+Move 56: Move card from Free Cell 3 to Cascade 8
+Move 57: Move 2 cards from Cascade 2 to Cascade 1
+Move 58: Move card from Cascade 2 to Free Cell 3
+Move 59: Move card from Cascade 2 to Cascade 5
+Move 60: Move card from Free Cell 1 to Cascade 7
+Move 61: Move card from Cascade 1 to Free Cell 1
+Move 62: Move card from Cascade 5 to Cascade 2
+Move 63: Move card from Free Cell 3 to Cascade 2
+Move 64: Move card from Cascade 8 to Free Cell 3
+Move 65: Move card from Free Cell 4 to Cascade 8
+Move 66: Move card from Cascade 7 to Free Cell 4
+Move 67: Move card from Cascade 1 to Cascade 2
+Move 68: Move card from Free Cell 1 to Cascade 2
+Move 69: Move card from Cascade 8 to Free Cell 1
+Move 70: Move card from Free Cell 3 to Cascade 8
+Move 71: Move card from Cascade 6 to Free Cell 3
+Move 72: Move card from Free Cell 4 to Cascade 7
+Move 73: Move card from Cascade 2 to Free Cell 4
+Move 74: Move card from Free Cell 3 to Cascade 6
+Move 75: Move card from Cascade 7 to Free Cell 3
+Move 76: Move card from Cascade 2 to Cascade 1
+Move 77: Move card from Free Cell 4 to Cascade 1
+Move 78: Move 2 cards from Cascade 2 to Cascade 5
+Move 79: Move 2 cards from Cascade 1 to Cascade 5
+Move 80: Move card from Cascade 3 to Free Cell 4
+Move 81: Move card from Free Cell 3 to Cascade 7
+Move 82: Move 2 cards from Cascade 3 to Cascade 5
+Move 83: Move card from Cascade 7 to Free Cell 3
+Move 84: Move card from Free Cell 4 to Cascade 5
+Move 85: Move card from Cascade 3 to Free Cell 4
+Move 86: Move card from Free Cell 3 to Cascade 7
+Move 87: Move card from Cascade 3 to Free Cell 3
+Move 88: Move card from Free Cell 2 to Cascade 3
+Move 89: Move 2 cards from Cascade 6 to Cascade 3
+Move 90: Move card from Cascade 6 to Free Cell 2
+Move 91: Move card from Cascade 6 to Cascade 2
+Move 92: Move card from Cascade 6 to S Foundation
+Move 93: Move card from Free Cell 3 to Cascade 6
+Move 94: Move card from Cascade 7 to Free Cell 3
+Move 95: Move card from Cascade 4 to Cascade 3
+Move 96: Move card from Cascade 1 to Cascade 2
+Move 97: Move card from Free Cell 1 to Cascade 6
+Move 98: Move card from Cascade 1 to Free Cell 1
+Move 99: Move card from Free Cell 3 to Cascade 7
+Move 100: Move card from Cascade 1 to Free Cell 3
+Move 101: Move card from Cascade 1 to S Foundation
+Move 102: Move card from Cascade 1 to C Foundation
+Move 103: Move card from Cascade 5 to C Foundation
+Move 104: Move card from Free Cell 3 to Cascade 1
+Move 105: Move 2 cards from Cascade 4 to Cascade 1
+Move 106: Move card from Cascade 4 to H Foundation
+Move 107: Move card from Cascade 6 to Free Cell 3
+Move 108: Move card from Cascade 3 to Cascade 1
+Move 109: Move card from Cascade 6 to Cascade 4
+Move 110: Move card from Cascade 5 to Cascade 6
+Move 111: Move card from Cascade 1 to Cascade 3
+Move 112: Move card from Free Cell 3 to Cascade 4
+Move 113: Move card from Cascade 6 to Free Cell 3
+Move 114: Move card from Cascade 3 to Cascade 1
+Move 115: Move card from Free Cell 2 to Cascade 6
+Move 116: Move card from Cascade 7 to Free Cell 2
+Move 117: Move card from Cascade 1 to Cascade 3
+Move 118: Move card from Free Cell 4 to Cascade 7
+Move 119: Move card from Cascade 6 to Free Cell 4
+Move 120: Move card from Free Cell 3 to Cascade 6
+Move 121: Move card from Cascade 7 to Free Cell 3
+Move 122: Move card from Cascade 3 to Cascade 1
+Move 123: Move card from Free Cell 2 to Cascade 7
+Move 124: Move card from Cascade 6 to Free Cell 2
+Move 125: Move card from Free Cell 1 to Cascade 6
+Move 126: Move card from Cascade 4 to Free Cell 1
+Move 127: Move card from Cascade 1 to Cascade 3
+Move 128: Move card from Cascade 5 to Cascade 6
+Move 129: Move card from Free Cell 2 to Cascade 6
+Move 130: Move 2 cards from Cascade 4 to Cascade 3
+Move 131: Move card from Cascade 7 to Free Cell 2
+Move 132: Move card from Cascade 7 to Cascade 4
+Move 133: Move card from Free Cell 3 to Cascade 4
+Move 134: Move card from Cascade 7 to Free Cell 3
+Move 135: Move card from Cascade 7 to D Foundation
+Move 136: Move card from Cascade 4 to D Foundation
+Move 137: Move card from Cascade 6 to D Foundation
+Move 138: Move card from Cascade 4 to C Foundation
+Move 139: Move card from Cascade 6 to C Foundation
+Move 140: Move card from Cascade 4 to D Foundation
+Move 141: Move card from Cascade 5 to D Foundation
+Move 142: Move card from Cascade 2 to Cascade 4
+Move 143: Move card from Cascade 8 to D Foundation
+Move 144: Move card from Cascade 4 to D Foundation
+Move 145: Move card from Cascade 8 to Cascade 4
+Move 146: Move card from Cascade 8 to D Foundation
+Move 147: Move card from Free Cell 1 to Cascade 4
+Move 148: Move 2 cards from Cascade 3 to Cascade 8
+Move 149: Move 2 cards from Cascade 5 to Cascade 2
+Move 150: Move card from Cascade 5 to Free Cell 1
+Move 151: Move card from Cascade 5 to D Foundation
+Move 152: Move card from Cascade 1 to D Foundation
+Move 153: Move card from Cascade 6 to Cascade 2
+Move 154: Move card from Cascade 5 to Cascade 6
+Move 155: Move card from Cascade 5 to D Foundation
+Move 156: Move card from Cascade 5 to S Foundation
+Move 157: Move card from Cascade 2 to Cascade 5
+Move 158: Move card from Cascade 4 to Cascade 8
+Move 159: Move card from Cascade 4 to S Foundation
+Move 160: Move card from Cascade 1 to Cascade 4
+Move 161: Move card from Cascade 1 to D Foundation
+Move 162: Move card from Cascade 2 to Cascade 1
+Move 163: Move card from Free Cell 1 to S Foundation
+Move 164: Move card from Cascade 2 to Free Cell 1
+Move 165: Move card from Cascade 5 to Cascade 1
+Move 166: Move 2 cards from Cascade 2 to Cascade 6
+Move 167: Move 2 cards from Cascade 3 to Cascade 4
+Move 168: Move card from Cascade 2 to Cascade 5
+Move 169: Move card from Free Cell 1 to Cascade 6
+Move 170: Move card from Cascade 2 to Free Cell 1
+Move 171: Move card from Cascade 2 to H Foundation
+Move 172: Move card from Free Cell 2 to H Foundation
+Move 173: Move card from Cascade 7 to H Foundation
+Move 174: Move card from Free Cell 3 to H Foundation
+Move 175: Move card from Cascade 1 to H Foundation
+Move 176: Move card from Cascade 2 to C Foundation
+Move 177: Move card from Cascade 1 to C Foundation
+Move 178: Move card from Cascade 8 to H Foundation
+Move 179: Move card from Cascade 6 to H Foundation
+Move 180: Move card from Cascade 8 to C Foundation
+Move 181: Move card from Cascade 6 to C Foundation
+Move 182: Move card from Cascade 8 to H Foundation
+Move 183: Move card from Cascade 4 to C Foundation
+Move 184: Move card from Cascade 6 to H Foundation
+Move 185: Move card from Cascade 8 to S Foundation
+Move 186: Move card from Cascade 4 to H Foundation
+Move 187: Move card from Cascade 5 to S Foundation
+Move 188: Move card from Cascade 6 to C Foundation
+Move 189: Move card from Cascade 3 to C Foundation
+Move 190: Move card from Cascade 4 to S Foundation
+Move 191: Move card from Free Cell 1 to H Foundation
+Move 192: Move card from Cascade 3 to H Foundation
+Move 193: Move card from Cascade 7 to C Foundation
+Move 194: Move card from Free Cell 4 to S Foundation

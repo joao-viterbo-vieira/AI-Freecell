@@ -1,0 +1,26 @@
+Heuristic: Wa
+Difficulty: Easy
+----------------------------------------
+Time Taken:
+  Values: [0.73, 12.05, 0.24, 0.12, 0.2]
+  Average: 2.67
+
+Peak Memory:
+  Values: [80.55, 357.1, 70.5, 61.29, 60.85]
+  Average: 126.06
+
+States Explored:
+  Values: [1605, 27497, 400, 233, 679]
+  Average: 6082.80
+
+States Generated:
+  Values: [20982, 303059, 8913, 2702, 3937]
+  Average: 67918.60
+
+States Per Second:
+  Values: [2210.93, 2282.19, 1646.7, 1922.65, 3384.71]
+  Average: 2289.44
+
+Solution Length Diff:
+  Values: [-8, -14, -2, -4, 2]
+  Average: -5.20

@@ -1,0 +1,26 @@
+Heuristic: Greedy
+Difficulty: Hard
+----------------------------------------
+Time Taken:
+  Values: [0.47, 109.67]
+  Average: 55.07
+
+Peak Memory:
+  Values: [825.3, 476.27]
+  Average: 650.78
+
+States Explored:
+  Values: [1181, 339892]
+  Average: 170536.50
+
+States Generated:
+  Values: [4165, 1129202]
+  Average: 566683.50
+
+States Per Second:
+  Values: [2523.28, 3099.24]
+  Average: 2811.26
+
+Solution Length Diff:
+  Values: [35, 27]
+  Average: 31.00

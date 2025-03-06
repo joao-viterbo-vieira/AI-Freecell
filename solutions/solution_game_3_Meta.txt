@@ -1,0 +1,76 @@
+5♦	A♣	5♣	A♠	3♦	7♥	A♦	A♥
+6♣	2♥	3♣	4♦	2♣	3♥	7♠	6♥
+5♥	4♥	5♠	4♠	2♦	3♠	4♣	6♦
+2♠	7♣	6♠	7♦				
+
+
+Solution for Game 3
+==================================================
+
+Performance Metrics:
+--------------------------------------------------
+Time taken: 0.05 seconds
+Memory used:3.48 MB
+Average memory::57.58 MB
+Peak memory usage: 59.32 MB
+States explored: 88
+States generated: 1631
+States per second: 1950.66
+Maximum queue size: 1342
+Maximum depth reached: 51
+Solution length: 51
+Peak memory usage:59.32 MB
+
+Solution Moves:
+--------------------------------------------------
+Move 1: Move card from Cascade 3 to Cascade 4
+Move 2: Move card from Cascade 8 to Cascade 2
+Move 3: Move card from Cascade 3 to Cascade 8
+Move 4: Move card from Cascade 5 to Cascade 3
+Move 5: Move 2 cards from Cascade 5 to Cascade 7
+Move 6: Move card from Cascade 8 to Cascade 2
+Move 7: Move card from Cascade 8 to Free Cell 1
+Move 8: Move card from Cascade 8 to H Foundation
+Move 9: Move 3 cards from Cascade 7 to Cascade 5
+Move 10: Move card from Free Cell 1 to Cascade 7
+Move 11: Move card from Cascade 3 to Cascade 6
+Move 12: Move card from Cascade 3 to Free Cell 1
+Move 13: Move card from Cascade 3 to Cascade 7
+Move 14: Move 3 cards from Cascade 2 to Cascade 3
+Move 15: Move card from Free Cell 1 to Cascade 2
+Move 16: Move 2 cards from Cascade 2 to Cascade 3
+Move 17: Move card from Cascade 2 to H Foundation
+Move 18: Move card from Cascade 2 to C Foundation
+Move 19: Move card from Cascade 5 to C Foundation
+Move 20: Move card from Cascade 3 to C Foundation
+Move 21: Move card from Cascade 1 to Cascade 2
+Move 22: Move 2 cards from Cascade 6 to Cascade 3
+Move 23: Move card from Cascade 6 to H Foundation
+Move 24: Move 2 cards from Cascade 1 to Cascade 6
+Move 25: Move card from Cascade 1 to Cascade 4
+Move 26: Move 3 cards from Cascade 4 to Cascade 1
+Move 27: Move card from Cascade 4 to Cascade 1
+Move 28: Move card from Cascade 4 to Cascade 7
+Move 29: Move card from Cascade 4 to S Foundation
+Move 30: Move card from Cascade 2 to S Foundation
+Move 31: Move 4 cards from Cascade 7 to Cascade 2
+Move 32: Move card from Cascade 7 to D Foundation
+Move 33: Move card from Cascade 3 to D Foundation
+Move 34: Move card from Cascade 3 to S Foundation
+Move 35: Move card from Cascade 5 to D Foundation
+Move 36: Move card from Cascade 1 to S Foundation
+Move 37: Move card from Cascade 2 to D Foundation
+Move 38: Move card from Cascade 3 to H Foundation
+Move 39: Move card from Cascade 5 to C Foundation
+Move 40: Move card from Cascade 1 to D Foundation
+Move 41: Move card from Cascade 2 to C Foundation
+Move 42: Move card from Cascade 3 to S Foundation
+Move 43: Move card from Cascade 6 to H Foundation
+Move 44: Move card from Cascade 1 to S Foundation
+Move 45: Move card from Cascade 2 to H Foundation
+Move 46: Move card from Cascade 3 to D Foundation
+Move 47: Move card from Cascade 6 to C Foundation
+Move 48: Move card from Cascade 1 to D Foundation
+Move 49: Move card from Cascade 2 to S Foundation
+Move 50: Move card from Cascade 3 to C Foundation
+Move 51: Move card from Cascade 6 to H Foundation

@@ -651,20 +651,89 @@ class FreeCellGame:
                 ) = None
 
     def meta_heuristic(self):
+        """
+            Metaheuristic scoring function for FreeCell game state evaluation
+            Lower score indicates a better game state
+            
+            Scoring Strategy:
+            - Penalize incomplete foundations
+            - Penalize occupied free cells
+            - Penalize suboptimal card sequences
+        """
         score = 0
-        for suit in self.foundations:
-            score -= len(self.foundations[suit]) * 10
-        for cell in self.free_cells:
-            if cell:
-                score += 5
+        
+        # Foundations Scoring
+        # Heavily penalize incomplete foundations
+        for suit, cards in self.foundations.items():
+            # Higher penalty for fewer cards in foundations
+            score += (13 - len(cards)) * 50  # More points for fewer cards in foundations
+        
+        # Free Cells Evaluation
+        # Penalize occupied free cells
+        occupied_free_cells = sum(1 for cell in self.free_cells if cell)
+        score += occupied_free_cells * 100  # High penalty for each occupied free cell
+        
+        # Cascade Analysis
+        # Penalize suboptimal sequences and color patterns
         for cascade in self.cascades:
+            sequence_penalty = 0
+            
+            # Analyze card sequences
             for i in range(len(cascade) - 1):
-                if not (
-                    cascade[i].rank == cascade[i + 1].rank + 1
-                    and cascade[i].color != cascade[i + 1].color
-                ):
-                    score += 1
+                # Penalty for non-decreasing rank sequence
+                if not (cascade[i].rank == cascade[i + 1].rank + 1):
+                    sequence_penalty += 20
+                
+                # Penalty for same color adjacency
+                if cascade[i].color == cascade[i + 1].color:
+                    sequence_penalty += 10
+            
+            score += sequence_penalty
+        
+        # Mobility Penalty
+        # Penalize limited move possibilities
+        mobility_penalty = self.calculate_mobility_penalty()
+        score += mobility_penalty
+        
         return score
+
+    def calculate_mobility_penalty(self):
+        """
+        Calculate mobility penalty for the game state
+        
+        Focuses on:
+        - Number of potentially unmovable cards
+        - Lack of move opportunities
+        """
+        mobility_penalty = 0
+        
+        # Check movability of cards
+        for cascade_idx, cascade in enumerate(self.cascades):
+            if not cascade:
+                continue
+            
+            # Check top card of each cascade
+            top_card = cascade[-1]
+            
+            # Check if top card can move to foundations
+            if not self.can_move_to_foundation(top_card):
+                # Check if top card can move to any other cascade
+                move_possible = False
+                for other_idx in range(len(self.cascades)):
+                    if other_idx != cascade_idx and self.can_move_to_cascade(top_card, other_idx):
+                        move_possible = True
+                        break
+                
+                # If no move is possible, add mobility penalty
+                if not move_possible:
+                    mobility_penalty += 50
+        
+        # Additional penalty for lack of free cells
+        empty_free_cells = 4 - sum(1 for cell in self.free_cells if cell)
+        mobility_penalty += (4 - empty_free_cells) * 50
+        
+        return mobility_penalty
+
 
     def heuristic1(self):
         total_missing = 52 - sum(
@@ -1417,10 +1486,10 @@ def format_move(move):
 def solve_freecell_astar(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic3(), id(game), game, [])]
+    queue = [(game.heuristic1(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 1000000
+    max_states = 200000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1440,7 +1509,7 @@ def solve_freecell_astar(game):
             heapq.heappush(
                 queue,
                 (
-                    new_game.heuristic3() + len(moves) + 1,
+                    new_game.heuristic1() + len(moves) + 1,
                     id(new_game),
                     new_game,
                     moves + [move],
@@ -1458,7 +1527,7 @@ def solve_freecell_astar2(game):
     queue = [(game.heuristic2(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 1000000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1493,10 +1562,10 @@ def solve_freecell_astar2(game):
 def solve_freecell_astar3(game):
     metrics = PerformanceMetrics()
     metrics.start()
-    queue = [(game.heuristic1(), id(game), game, [])]
+    queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 1000000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1516,7 +1585,7 @@ def solve_freecell_astar3(game):
             heapq.heappush(
                 queue,
                 (
-                    new_game.heuristic1() + len(moves) + 1,
+                    new_game.heuristic3() + len(moves) + 1,
                     id(new_game),
                     new_game,
                     moves + [move],
@@ -1534,7 +1603,7 @@ def solve_freecell_metaheuristic(game):
     queue = [(game.meta_heuristic(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 1000000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1573,7 +1642,7 @@ def solve_freecell_weighted_astar(game, weight=1.5):
     heapq.heapify(queue)
     visited = set()
     visited.add(hash(game))
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = 0
     metrics.states_generated = 1
     metrics.max_queue_size = 1
@@ -1632,7 +1701,7 @@ def solve_freecell_greedy(game):
     queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -1693,7 +1762,7 @@ def solve_freecell_dfs(game):
     stack = [(game, [])]
     visited = {hash(game)}
     max_states = 200000 
-    max_depth = 100
+    max_depth = 150
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while stack and metrics.states_explored < max_states:

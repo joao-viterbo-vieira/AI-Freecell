@@ -7,17 +7,17 @@ Solution for Game 2
 
 Performance Metrics:
 --------------------------------------------------
-Time taken: 20.12 seconds
-Memory used:4.66 MB
-Average memory::61.26 MB
-Peak memory usage: 1910.08 MB
+Time taken: 28.76 seconds
+Memory used:6.69 MB
+Average memory::59.90 MB
+Peak memory usage: 76.69 MB
 States explored: 1332149
 States generated: 1332804
-States per second: 66194.13
+States per second: 46319.29
 Maximum queue size: 335
 Maximum depth reached: 0
 Solution length: 14
-Peak memory usage:1910.08 MB
+Peak memory usage:76.69 MB
 
 Solution Moves:
 --------------------------------------------------

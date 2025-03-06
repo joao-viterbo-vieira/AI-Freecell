@@ -8,16 +8,16 @@ Solution for Game 2
 Performance Metrics:
 --------------------------------------------------
 Time taken: 0.01 seconds
-Memory used:0.01 MB
-Average memory::63.39 MB
-Peak memory usage: 1910.08 MB
+Memory used:0.29 MB
+Average memory::56.12 MB
+Peak memory usage: 56.27 MB
 States explored: 16
 States generated: 197
-States per second: 1722.86
+States per second: 2282.54
 Maximum queue size: 178
 Maximum depth reached: 14
 Solution length: 14
-Peak memory usage:1910.08 MB
+Peak memory usage:56.27 MB
 
 Solution Moves:
 --------------------------------------------------

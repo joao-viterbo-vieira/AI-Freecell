@@ -10,7 +10,6 @@ game3148.txt - 72
 game10913.txt - 69
 
 game169.txt - 94
-game29596.txt - 105
 game32483.txt - 89
 game20810.txt - 86
 game44732.txt - 78
@@ -24,7 +23,6 @@ game10913.txt - easy
 
 Hard Games
 game169.txt - hard
-game29596.txt - hard
 game32483.txt - hard
 game20810.txt - hard
 game44732.txt - hard

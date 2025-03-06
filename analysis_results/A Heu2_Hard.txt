@@ -1,0 +1,26 @@
+Heuristic: A Heu2
+Difficulty: Hard
+----------------------------------------
+Time Taken:
+  Values: [12.94, 4.08, 29.63]
+  Average: 15.55
+
+Peak Memory:
+  Values: [115.38, 152.3, 287.89]
+  Average: 185.19
+
+States Explored:
+  Values: [63966, 15093, 109540]
+  Average: 62866.33
+
+States Generated:
+  Values: [196094, 83072, 535523]
+  Average: 271563.00
+
+States Per Second:
+  Values: [4943.51, 3702.72, 3696.64]
+  Average: 4114.29
+
+Solution Length Diff:
+  Values: [3, 5, -1]
+  Average: 2.33
