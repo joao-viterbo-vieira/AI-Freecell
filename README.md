@@ -125,7 +125,6 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 - Useful for deeply nested solutions
 
 ### Iterative Deepening Search (IDS)
-- Performs DFS with increasing depth limits
 - Combines BFS optimality with DFS space efficiency
 - Good alternative to A* for complex games
 
