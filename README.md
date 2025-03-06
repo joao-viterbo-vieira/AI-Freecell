@@ -238,7 +238,7 @@ To import a custom game:
 
 ### The Puzzle
 
-This analysis examines how different Large Language Models (LLMs) performed when solving a simple FreeCell solitaire puzzle.
+This analysis examines how different Large Language Models (LLMs) performed when solving a simple FreeCell solitaire puzzle (12 card game).
 
 ### Card Layout
 
