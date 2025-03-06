@@ -87,6 +87,7 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 3. Use "Undo" to take back moves
 4. Toggle "Auto On/Off" for automatic foundation moves
 5. Use "Hint" to get a suggested move
+6. If a supermove is possible and you want to select just the front card, click in the lower part of the front card
 
 ### AI Solver Mode
 1. Select an algorithm from the dropdown
