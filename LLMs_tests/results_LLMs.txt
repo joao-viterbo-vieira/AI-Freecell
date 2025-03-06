@@ -2,6 +2,7 @@ game2.txt
 A♥	3♥	2♥	A♦	A♣	A♠	3♠	3♦
 2♦	2♠	2♣	3♣	
 
+!!!Check the README.md for the LLM Performance Analysis!!!
 
 sonnet-3.7-extended-thinking zero shot 1m36s game2
 
@@ -83,7 +84,7 @@ Move 10: Move 3♥ from Cascade 2 to H Foundation
 Move 11: Move 3♠ from Cascade 7 to S Foundation
 Move 12: Move 3♦ from Cascade 8 to D Foundation
 
-deepseek-r1 zero shot 2min58 seconds game2
+deepseek-r1 zero shot reasoning for 2min58 seconds game2
 
 Move 1: Move A♣ from Cascade 5 to C Foundation
 Move 2: Move A♠ from Cascade 6 to S Foundation
