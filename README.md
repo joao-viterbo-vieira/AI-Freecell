@@ -15,7 +15,6 @@ A Python implementation of the classic FreeCell solitaire card game featuring bo
 7. [Advanced Features](#advanced-features)
 8. [FreeCell Statistics](#freecell-statistics)
 9. [Troubleshooting](#troubleshooting)
-10. [License](#license)
 
 ## Overview & Features
 
