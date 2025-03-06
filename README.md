@@ -15,6 +15,10 @@ A Python implementation of the classic FreeCell solitaire card game featuring bo
 7. [Advanced Features](#advanced-features)
 8. [FreeCell Statistics](#freecell-statistics)
 9. [Troubleshooting](#troubleshooting)
+10. [LLM Performance Analysis](#LLM-Performance-Analysis)
+11. [Designing a FreeCell LLM Agent: Architecture and Potential](#designing-a-freecell-LLM-agent-architecture-and-potential)
+
+
 
 ## Overview & Features
 
@@ -224,5 +228,82 @@ To import a custom game:
 - Verify the game number exists (e.g game123.txt)
 - Check file format and permissions
 
+## LLM Performance Analysis
+
+- `FreeCell_Solver_Prompt.txt` - Contains the prompt used for the LLMs, incorporating best practices of prompt engineering, including the goal, input format, return format, context dump, and rules.
+
+- `results_LLMs.txt` - Contains the raw output from each model's solution attempt, including timing information
+
+### The Puzzle
+
+This analysis examines how different Large Language Models (LLMs) performed when solving a simple FreeCell solitaire puzzle.
+
+### Card Layout
+
+The puzzle that all models attempted to solve had the following layout:
+
+```
+A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
+2♦ 2♠ 2♣ 3♣
+```
+
+### Results
+
+| Model | Time | Moves | Success |
+|-------|------|-------|---------|
+| Claude 3.7 Sonnet (extended thinking) | 1m 36s | 13 | ✅ |
+| Grok3 | 1m 10s | 14 | ✅ |
+| O3-mini-high | 1m 12s | 13 | ✅ |
+| O3-mini | 20s | 12 | ✅ |
+| O1 | 41s | 12 | ✅ |
+| Deepseek-r1 | 2m 58s | 15 | ✅ |
+| ChatGPT-4o (2025-01-29) | - | - | ❌ |
+| ChatGPT-4.5-Preview | - | - | ❌ |
+| Gemini 2.0 Flash Thinking | - | - | ❌ |
+| Gemini 2.0 Pro | - | - | ❌ |
+| Claude 3.7 (without extended thinking) | - | - | ❌ |
+| Qwen-max-2025-01-25 | - | - | ❌ |
+| Llama-3.3-70b-instruct | - | - | ❌ |
+| Mistral-large-2411 | - | - | ❌ |
+
+### Key Observations
+
+1. **Solution Efficiency**:
+   - O3-mini and O1 found the most efficient solutions (12 moves)
+   - Deepseek-r1 took the longest time and path (15 moves)
+   - Most successful models found solutions in 12-14 moves
+
+2. **Processing Time**:
+   - O3-mini solved it fastest (20 seconds)
+   - Deepseek-r1 took longest (nearly 3 minutes)
+   - Extended thinking made a critical difference for Claude 3.7
+
+3. **Success Rate**:
+   - 6 out of 14 tested models successfully solved the puzzle (All reasoning models)
+   - Several top LLMs (including ChatGPT-4o, Gemini 2.0, and standard Claude 3.7) failed
+
+4. **Time vs. Efficiency Correlation**:
+   - Interestingly, longer processing time didn't always yield more efficient solutions
+   - O3-mini found one of the most efficient solutions in the shortest time
 
 
+This benchmark reveals significant differences in how LLMs handle rule-based strategic planning tasks. The results suggest that specialized reasoning capabilities may be more important than overall model size for game-solving tasks like simple FreeCell games (12 cards).
+
+## Designing a FreeCell LLM Agent: Architecture and Potential
+
+The design concept for a FreeCell LLM Agent presents an innovative approach to game assistance through a function-calling architecture. This agent would combine:
+
+### Customized Personality
+A prompt-engineered personality that's friendly, funny, and educational.
+
+### Function-Based Game Understanding
+Six core functions provide the LLM with complete game awareness:
+
+- **Getting valid moves and board state**
+- **Executing moves and suggesting hints**
+- **Finding complete solution paths**
+- **Supporting voice interaction**
+
+This architecture solves a key challenge in game-playing LLMs: how to give models accurate, real-time game state information without hallucination. By exposing specific game functions to the LLM, it can make informed decisions based on the actual game state rather than its internal understanding of FreeCell rules.
+
+The design represents a promising bridge between traditional game-solving algorithms and natural language interfaces, potentially making complex puzzle games more accessible to casual players.
