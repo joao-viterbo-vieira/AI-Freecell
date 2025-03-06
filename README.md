@@ -177,8 +177,22 @@ Solution analysis includes:
 - Solution length
 - Maximum depth reached
 
+
 ### Complete Output File
 The system generates a file in the "solutions" folder containing the initial position, all performance metrics, and a complete sequence of all moves performed to solve the game.
+
+### Game Import Instructions
+To import a custom game:
+
+- Create a text file in the "games" folder with name format "gamesXXX.txt" (where XXX is a number)
+- Enter card arrangement using the following format:
+  ```
+  3♣ 2♠ 2♣ A♦ 3♥ 2♥ 3♦ 3♠
+  2♦ A♥ A♠ A♣
+  ```
+
+- Save the file and select it from the game loader menu
+- The system supports standard card notation with suit symbols (♣, ♠, ♥, ♦) and will automatically process the layout according to the specified format.
 
 
 ## FreeCell Statistics
