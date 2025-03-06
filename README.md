@@ -37,9 +37,9 @@ FreeCell is a solitaire card game with the rare quality that nearly all deals ar
 ### Setup
 ```bash
 git clone https://github.com/joao-viterbo-vieira/ai-freecell.git
-cd freecell-ai
+cd ai-freecell
 pip install pygame psutil
-python Freecell_comAutoMoves.py
+python Freecell_last.py
 ```
 
 ## Interface & Controls
@@ -133,19 +133,38 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 - Finds good solutions faster than standard A*
 - Use when speed matters more than perfect optimality
 
-### Meta-heuristic
+### Meta-heuristic (Meta, Meta2)
 - Custom approach combining multiple evaluation factors
 - Considers card arrangement patterns and strategic moves
 - Balances solution quality and search time
 
 ## Advanced Features
 
+### Cards solving visualization
+- View the solution step-by-step with full control over playback speed
+- Pause at any point to examine the board state
+- Navigate forward and backward through solution moves
+- Adjust animation speed to see moves quickly or study them in detail (keys +/-)
+
+### Super Moves
+Automatically identifies and executes multi-step card sequences
+- Moves multiple cards as a stack when a valid destination is available
+- Reduces the number of manual moves needed for common sequences
+- Highlights potential super moves on the board when available
+
 ### Auto-Moves
 When enabled, cards automatically move to foundations when safe:
 - Cards move if all lower ranks of all suits are already in the foundation
 - Toggle in player mode with "Auto On/Off" or in solver mode with "AutoMove On/Off"
 
-### Deck Size Options
+### Undo Moves (single player mode)
+- Revert any mistake with unlimited undo capability
+- Track and restore exact board states after each move
+- Maintain game statistics even after undoing moves
+- Quick undo shortcut available via keyboard or button press
+
+
+### Deck Size and Difficulty Options
 - **52 cards**: Standard full deck
 - **28 cards**: Reduced deck (A-7 of each suit)
 - **12 cards**: Mini deck (A-3 of each suit)
@@ -157,6 +176,10 @@ Solution analysis includes:
 - Maximum queue size
 - Solution length
 - Maximum depth reached
+
+### Complete Output File
+The system generates a file in the "solutions" folder containing the initial position, all performance metrics, and a complete sequence of all moves performed to solve the game.
+
 
 ## FreeCell Statistics
 
