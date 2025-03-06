@@ -5,13 +5,18 @@ import platform
 
 
 class PerformanceMetrics:
+    """
+    Tracks performance metrics for algorithms, including time, memory, and search statistics.
+    """
+
     def __init__(self):
-        # Initialize peak memory tracking first
+        # Initialize process tracking and reset metrics
         self.process = psutil.Process(os.getpid())
         self.memory_snapshots = []
         self.reset()
 
     def reset(self):
+        """Reset all performance metrics to their initial state."""
         self.start_time = 0
         self.end_time = 0
         self.start_memory = 0
@@ -32,20 +37,21 @@ class PerformanceMetrics:
         self.track_peak_memory()
 
     def track_peak_memory(self):
-        """Update peak memory if current usage is higher and store snapshot"""
-        current = self.process.memory_info().rss / 1024 / 1024  # MB
+        """Update peak memory if current usage is higher and store snapshot."""
+        current = self.process.memory_info().rss / 1024 / 1024  # Convert bytes to MB
         self.memory_snapshots.append(current)
         if current > self.peak_memory:
             self.peak_memory = current
 
     def sample_memory(self):
-        """Take a memory snapshot for average calculation without affecting peak tracking"""
+        """Take a memory snapshot for average calculation."""
         current = self.process.memory_info().rss / 1024 / 1024  # MB
         self.memory_snapshots.append(current)
 
     def start(self):
+        """Begin performance tracking with clean memory state."""
         self.start_time = time.time()
-        # Force garbage collection before measuring starting memory
+        # Force garbage collection for accurate memory measurement
         import gc
 
         gc.collect()
@@ -53,12 +59,12 @@ class PerformanceMetrics:
         self.peak_memory = self.start_memory  # Reset peak memory tracking
 
     def stop(self, solution=None):
+        """End performance tracking and record solution length if provided."""
         self.end_time = time.time()
-        self.track_peak_memory()  # One final check
+        self.track_peak_memory()  # Final memory check
 
-        # Wait a moment for memory operations to complete
+        # Ensure memory measurements are stable
         time.sleep(0.1)
-        # Force garbage collection before measuring final memory
         import gc
 
         gc.collect()
@@ -68,21 +74,22 @@ class PerformanceMetrics:
             self.solution_length = len(solution)
 
     def print_report(self, algorithm_name):
+        """
+        Generate and print a comprehensive performance report for the algorithm.
+
+        Args:
+            algorithm_name: Name of the algorithm being evaluated
+        """
         elapsed_time = self.end_time - self.start_time
 
-        # Calculate memory difference
+        # Calculate memory difference with noise handling
         memory_diff = self.end_memory - self.start_memory
-
-        # If memory difference is very small, it's likely measurement noise
-        if abs(memory_diff) < 0.1:  # Less than 0.1 MB difference
-            # Use peak memory minus start memory instead
+        if abs(memory_diff) < 0.1:  # Treat small differences as measurement noise
             self.memory_used = self.peak_memory - self.start_memory
         else:
-            self.memory_used = max(
-                0.01, memory_diff
-            )  # Ensure at least minimal positive value
+            self.memory_used = max(0.01, memory_diff)  # Ensure positive value
 
-        # Calculate average memory usage from snapshots
+        # Calculate average memory usage
         if self.memory_snapshots:
             self.avg_memory = sum(self.memory_snapshots) / len(self.memory_snapshots)
 
@@ -100,12 +107,11 @@ class PerformanceMetrics:
         print(f"Solution length: {self.solution_length} moves")
         print(f"Maximum depth reached: {self.max_depth_reached}")
 
-        # Get peak memory usage
-        # Try to use platform-specific methods first
+        # Get platform-specific peak memory usage
         system = platform.system()
         if system == "Windows":
             try:
-                # Windows-specific peak working set size
+                # Windows-specific memory tracking
                 mem_info = self.process.memory_info()
                 if hasattr(mem_info, "peak_wset"):
                     self.max_memory = mem_info.peak_wset / 1024 / 1024  # MB
@@ -114,7 +120,7 @@ class PerformanceMetrics:
             except:
                 self.max_memory = self.peak_memory
         else:
-            # For macOS, Linux and others, use our tracked peak value
+            # For macOS, Linux and others, use tracked peak value
             self.max_memory = self.peak_memory
 
         print(f"Peak memory usage: {self.max_memory:.2f} MB")

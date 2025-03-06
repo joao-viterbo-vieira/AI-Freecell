@@ -5,10 +5,9 @@ from collections import deque
 import heapq
 import pygame
 import os
+import psutil
+import platform
 
-from PerformanceMetrics_Mac import (
-    PerformanceMetrics,
-)
 
 pygame.init()
 
@@ -161,7 +160,10 @@ class FreeCellGame:
         self.cascades = [[] for _ in range(8)]
         self.free_cells = [None] * 4
         self.foundations = {"H": [], "D": [], "C": [], "S": []}
-        files = {"easy": [164], "hard": [9998]}
+        files = {
+            "easy": [164, 1187, 3148, 9998, 10913],
+            "hard": [169, 20810, 32483, 44732],
+        }
         selected_file = random.choice(files.get(difficulty, []))
         return selected_file
 
@@ -652,88 +654,107 @@ class FreeCellGame:
 
     def meta_heuristic(self):
         """
-            Metaheuristic scoring function for FreeCell game state evaluation
-            Lower score indicates a better game state
-            
-            Scoring Strategy:
-            - Penalize incomplete foundations
-            - Penalize occupied free cells
-            - Penalize suboptimal card sequences
+        Metaheuristic scoring function for FreeCell game state evaluation
+        Lower score indicates a better game state
+
+        Scoring Strategy:
+        - Penalize incomplete foundations
+        - Penalize occupied free cells
+        - Penalize suboptimal card sequences
         """
         score = 0
-        
+
         # Foundations Scoring
         # Heavily penalize incomplete foundations
         for suit, cards in self.foundations.items():
             # Higher penalty for fewer cards in foundations
-            score += (13 - len(cards)) * 50  # More points for fewer cards in foundations
-        
+            score += (
+                13 - len(cards)
+            ) * 50  # More points for fewer cards in foundations
+
         # Free Cells Evaluation
         # Penalize occupied free cells
         occupied_free_cells = sum(1 for cell in self.free_cells if cell)
         score += occupied_free_cells * 100  # High penalty for each occupied free cell
-        
+
         # Cascade Analysis
         # Penalize suboptimal sequences and color patterns
         for cascade in self.cascades:
             sequence_penalty = 0
-            
+
             # Analyze card sequences
             for i in range(len(cascade) - 1):
                 # Penalty for non-decreasing rank sequence
                 if not (cascade[i].rank == cascade[i + 1].rank + 1):
                     sequence_penalty += 20
-                
+
                 # Penalty for same color adjacency
                 if cascade[i].color == cascade[i + 1].color:
                     sequence_penalty += 10
-            
+
             score += sequence_penalty
-        
+
         # Mobility Penalty
         # Penalize limited move possibilities
         mobility_penalty = self.calculate_mobility_penalty()
         score += mobility_penalty
-        
+
         return score
 
     def calculate_mobility_penalty(self):
         """
         Calculate mobility penalty for the game state
-        
+
         Focuses on:
         - Number of potentially unmovable cards
         - Lack of move opportunities
         """
         mobility_penalty = 0
-        
+
         # Check movability of cards
         for cascade_idx, cascade in enumerate(self.cascades):
             if not cascade:
                 continue
-            
+
             # Check top card of each cascade
             top_card = cascade[-1]
-            
+
             # Check if top card can move to foundations
             if not self.can_move_to_foundation(top_card):
                 # Check if top card can move to any other cascade
                 move_possible = False
                 for other_idx in range(len(self.cascades)):
-                    if other_idx != cascade_idx and self.can_move_to_cascade(top_card, other_idx):
+                    if other_idx != cascade_idx and self.can_move_to_cascade(
+                        top_card, other_idx
+                    ):
                         move_possible = True
                         break
-                
+
                 # If no move is possible, add mobility penalty
                 if not move_possible:
                     mobility_penalty += 50
-        
+
         # Additional penalty for lack of free cells
         empty_free_cells = 4 - sum(1 for cell in self.free_cells if cell)
         mobility_penalty += (4 - empty_free_cells) * 50
-        
+
         return mobility_penalty
 
+    def meta_heuristic2(self):
+        score = 0
+        for suit in self.foundations:
+            score -= len(self.foundations[suit]) * 10
+        for cell in self.free_cells:
+            if cell:
+                score += 5
+        for cascade in self.cascades:
+            for i in range(len(cascade) - 1):
+                if not (
+                    cascade[i].rank == cascade[i + 1].rank + 1
+                    and cascade[i].color != cascade[i + 1].color
+                ):
+                    score += 1
+        return score
 
     def heuristic1(self):
         total_missing = 52 - sum(
@@ -1340,6 +1361,129 @@ class FreeCellGame:
         pygame.display.flip()
 
 
+class PerformanceMetrics:
+    """
+    Tracks performance metrics for algorithms, including time, memory, and search statistics.
+    """
+
+    def __init__(self):
+        # Initialize process tracking and reset metrics
+        self.process = psutil.Process(os.getpid())
+        self.memory_snapshots = []
+        self.reset()
+
+    def reset(self):
+        """Reset all performance metrics to their initial state."""
+        self.start_time = 0
+        self.end_time = 0
+        self.start_memory = 0
+        self.end_memory = 0
+        self.states_explored = 0
+        self.states_generated = 0
+        self.max_queue_size = 0
+        self.solution_length = 0
+        self.max_depth_reached = 0
+        self.branching_factor = 0
+        self.memory_used = 0
+        self.max_memory = 0
+        self.peak_memory = 0
+        self.avg_memory = 0
+        self.memory_snapshots = []
+
+        # Take initial memory snapshot
+        self.track_peak_memory()
+
+    def track_peak_memory(self):
+        """Update peak memory if current usage is higher and store snapshot."""
+        current = self.process.memory_info().rss / 1024 / 1024  # Convert bytes to MB
+        self.memory_snapshots.append(current)
+        if current > self.peak_memory:
+            self.peak_memory = current
+
+    def sample_memory(self):
+        """Take a memory snapshot for average calculation."""
+        current = self.process.memory_info().rss / 1024 / 1024  # MB
+        self.memory_snapshots.append(current)
+
+    def start(self):
+        """Begin performance tracking with clean memory state."""
+        self.start_time = time.time()
+        # Force garbage collection for accurate memory measurement
+        import gc
+
+        gc.collect()
+        self.start_memory = self.process.memory_info().rss / 1024 / 1024  # MB
+        self.peak_memory = self.start_memory  # Reset peak memory tracking
+
+    def stop(self, solution=None):
+        """End performance tracking and record solution length if provided."""
+        self.end_time = time.time()
+        self.track_peak_memory()  # Final memory check
+
+        # Ensure memory measurements are stable
+        time.sleep(0.1)
+        import gc
+
+        gc.collect()
+
+        self.end_memory = self.process.memory_info().rss / 1024 / 1024  # MB
+        if solution:
+            self.solution_length = len(solution)
+
+    def print_report(self, algorithm_name):
+        """
+        Generate and print a comprehensive performance report for the algorithm.
+
+        Args:
+            algorithm_name: Name of the algorithm being evaluated
+        """
+        elapsed_time = self.end_time - self.start_time
+
+        # Calculate memory difference with noise handling
+        memory_diff = self.end_memory - self.start_memory
+        if abs(memory_diff) < 0.1:  # Treat small differences as measurement noise
+            self.memory_used = self.peak_memory - self.start_memory
+        else:
+            self.memory_used = max(0.01, memory_diff)  # Ensure positive value
+
+        # Calculate average memory usage
+        if self.memory_snapshots:
+            self.avg_memory = sum(self.memory_snapshots) / len(self.memory_snapshots)
+
+        print("\n" + "=" * 50)
+        print(f"PERFORMANCE REPORT - {algorithm_name}")
+        print("=" * 50)
+        print(f"Time used: {elapsed_time:.4f} seconds")
+        print(f"Memory used: {self.memory_used:.2f} MB")
+        print(f"Average memory: {self.avg_memory:.2f} MB")
+        print(f"States explored: {self.states_explored}")
+        print(f"States generated: {self.states_generated}")
+        if elapsed_time > 0:
+            print(f"States per second: {self.states_explored / elapsed_time:.2f}")
+        print(f"Maximum queue size: {self.max_queue_size}")
+        print(f"Solution length: {self.solution_length} moves")
+        print(f"Maximum depth reached: {self.max_depth_reached}")
+
+        # Get platform-specific peak memory usage
+        system = platform.system()
+        if system == "Windows":
+            try:
+                # Windows-specific memory tracking
+                mem_info = self.process.memory_info()
+                if hasattr(mem_info, "peak_wset"):
+                    self.max_memory = mem_info.peak_wset / 1024 / 1024  # MB
+                else:
+                    self.max_memory = self.peak_memory
+            except:
+                self.max_memory = self.peak_memory
+        else:
+            # For macOS, Linux and others, use tracked peak value
+            self.max_memory = self.peak_memory
+
+        print(f"Peak memory usage: {self.max_memory:.2f} MB")
+        print("=" * 50)
+
+
 def load_game_from_file(game_number):
     global current_game_number
     try:
@@ -1635,6 +1779,44 @@ def solve_freecell_metaheuristic(game):
     return None, metrics
 
 
+def solve_freecell_metaheuristic2(game):
+    metrics = PerformanceMetrics()
+    metrics.start()
+    queue = [(game.meta_heuristic2(), id(game), game, [])]
+    heapq.heapify(queue)
+    visited = {hash(game)}
+    max_states = 500000
+    metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
+
+    while queue and metrics.states_explored < max_states:
+        _, _, current_game, moves = heapq.heappop(queue)
+        metrics.states_explored += 1
+        metrics.max_depth_reached = max(metrics.max_depth_reached, len(moves))
+        if current_game.is_solved():
+            metrics.stop(moves)
+            return moves, metrics
+        for move in current_game.get_valid_moves():
+            new_game = FreeCellGame(current_game)
+            new_game.make_move(move)
+            metrics.states_generated += 1
+            new_hash = hash(new_game)
+            if new_hash in visited:
+                continue
+            heapq.heappush(
+                queue,
+                (
+                    new_game.meta_heuristic2() + len(moves) + 1,
+                    id(new_game),
+                    new_game,
+                    moves + [move],
+                ),
+            )
+            visited.add(new_hash)
+            metrics.max_queue_size = max(metrics.max_queue_size, len(queue))
+    metrics.stop()
+    return None, metrics
+
+
 def solve_freecell_weighted_astar(game, weight=1.5):
     metrics = PerformanceMetrics()
     metrics.start()
@@ -1687,6 +1869,7 @@ def get_hint(game):
         "IDS": "ids",
         "WA*": "weighted_astar",
         "Meta": "metaheuristic",
+        "Meta2": "metaheuristic2",
         "A* Heu2": "astar2",
         "A* Heu3": "astar3",
     }
@@ -1761,7 +1944,7 @@ def solve_freecell_dfs(game):
     metrics.start()
     stack = [(game, [])]
     visited = {hash(game)}
-    max_states = 200000 
+    max_states = 200000
     max_depth = 150
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
@@ -1847,6 +2030,7 @@ def solve_freecell(game, algorithm="astar"):
         "ids": solve_freecell_ids,
         "weighted_astar": solve_freecell_weighted_astar,
         "metaheuristic": solve_freecell_metaheuristic,
+        "metaheuristic2": solve_freecell_metaheuristic2,
         "astar2": solve_freecell_astar2,
         "astar3": solve_freecell_astar3,
     }.get(algorithm, solve_freecell_astar)(game)
@@ -1860,13 +2044,15 @@ def main():
     solution = None
     solution_index = 0
     solving = False
-    current_algorithm = "A*"
+    current_algorithm = "A* Heu3"
     stats = None
     clock = pygame.time.Clock()
     last_move_time = 0
     game_timer = 0.0
     start_time = time.time()
     algorithms = [
+        "A* Heu3",
+        "A* Heu2",
         "A*",
         "Greedy",
         "BFS",
@@ -1874,8 +2060,7 @@ def main():
         "IDS",
         "WA*",
         "Meta",
-        "A* Heu2",
-        "A* Heu3",
+        "Meta2",
     ]
     algorithm_index = 0
     hint_move = None
@@ -2015,6 +2200,7 @@ def main():
                                 "IDS": "ids",
                                 "WA*": "weighted_astar",
                                 "Meta": "metaheuristic",
+                                "Meta2": "metaheuristic2",
                                 "A* Heu2": "astar2",
                                 "A* Heu3": "astar3",
                             }
