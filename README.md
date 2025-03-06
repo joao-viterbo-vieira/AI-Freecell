@@ -230,9 +230,9 @@ To import a custom game:
 
 ## LLM Performance Analysis
 
-- `FreeCell_Solver_Prompt.txt` - Contains the prompt used for the LLMs, incorporating best practices of prompt engineering, including the goal, input format, return format, context dump, and rules.
+- `LLMs_tests/FreeCell_Solver_Prompt.txt` - Contains the prompt used for the LLMs, incorporating best practices of prompt engineering, including the goal, input format, return format, context dump, and rules.
 
-- `results_LLMs.txt` - Contains the raw output from each model's solution attempt, including timing information
+- `LLMs_tests/results_LLMs.txt` - Contains the raw output from each model's solution attempt, including timing information
 
 ### The Puzzle
 
