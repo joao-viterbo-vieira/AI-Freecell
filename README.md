@@ -280,7 +280,7 @@ A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
 
 3. **Success Rate**:
    - 6 out of 14 tested models successfully solved the puzzle (All reasoning models)
-   - Several top LLMs (including ChatGPT-4o, Gemini 2.0, and standard Claude 3.7) failed
+   - Several top LLMs (including ChatGPT-4o, Gemini 2.0 Flash Thinking, and standard Claude 3.7) failed
 
 4. **Time vs. Efficiency Correlation**:
    - Interestingly, longer processing time didn't always yield more efficient solutions
