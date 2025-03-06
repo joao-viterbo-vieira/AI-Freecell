@@ -36,7 +36,7 @@ FreeCell is a solitaire card game with the rare quality that nearly all deals ar
 
 ### Setup
 ```bash
-git clone https://github.com/yourusername/freecell-ai.git
+git clone https://github.com/joao-viterbo-vieira/ai-freecell.git
 cd freecell-ai
 pip install pygame psutil
 python Freecell_comAutoMoves.py
