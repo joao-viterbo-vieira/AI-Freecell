@@ -249,7 +249,7 @@ A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
 2♦ 2♠ 2♣ 3♣
 ```
 
-### Results (First try results zero-shot)
+### Results (Zero-shot)
 
 | Model | Time | Moves | Success |
 |-------|------|-------|---------|
