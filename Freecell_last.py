@@ -128,7 +128,6 @@ class Card:
 
 
 class FreeCellGame:
-  
     """
     A class representing a FreeCell Solitaire game state and its evaluation heuristics.
 
@@ -272,7 +271,6 @@ class FreeCellGame:
         return card.rank == top_card.rank - 1 and card.color != top_card.color
 
     def _is_valid_sequence(self, cards):
-        
         if len(cards) <= 1:
             return True
         for i in range(len(cards) - 1):
@@ -440,7 +438,7 @@ class FreeCellGame:
         Otherwise, standard valid moves are retrieved.
 
         Args:
-            original_get_valid_moves (function, optional): If provided, uses this function 
+            original_get_valid_moves (function, optional): If provided, uses this function
                 to get valid moves, avoiding recursion.
 
         Returns:
@@ -649,18 +647,18 @@ class FreeCellGame:
 
     def undo_last_move(self):
         """
-    Undoes the last move made by the player, either manual or automatic.
+        Undoes the last move made by the player, either manual or automatic.
 
-    The function removes the last action from the list of player moves and 
-    reverts the board state to the previous configuration. The move is checked
-    to determine whether it was a cascade, free cell, or foundation move, and 
-    the state of the relevant piles (cascades, foundations, and free cells) 
-    is updated accordingly.
+        The function removes the last action from the list of player moves and
+        reverts the board state to the previous configuration. The move is checked
+        to determine whether it was a cascade, free cell, or foundation move, and
+        the state of the relevant piles (cascades, foundations, and free cells)
+        is updated accordingly.
 
-    Returns:
-        bool: Returns True if the move was successfully undone, False if no 
-              moves are available to undo.
-    """
+        Returns:
+            bool: Returns True if the move was successfully undone, False if no
+                  moves are available to undo.
+        """
         if not self.player_moves:
             return False
         last_action = self.player_moves.pop()
@@ -691,10 +689,10 @@ class FreeCellGame:
         """
         Handles the click event on the game board and processes the player's actions.
 
-        Depending on the coordinates of the click, the function selects a card or 
-        sequence of cards, or determines the destination for the selected card(s). 
-        It also makes the corresponding move if valid, such as moving a card to a 
-        cascade, foundation, or free cell. Additionally, the function provides 
+        Depending on the coordinates of the click, the function selects a card or
+        sequence of cards, or determines the destination for the selected card(s).
+        It also makes the corresponding move if valid, such as moving a card to a
+        cascade, foundation, or free cell. Additionally, the function provides
         feedback on valid moves for the player and updates the game state accordingly.
 
         Args:
@@ -963,7 +961,7 @@ class FreeCellGame:
         """
         Computes the heuristic value based on the total number of cards missing from the foundations.
 
-        The heuristic is the difference between 52 (total number of cards in the game) and the sum of the cards 
+        The heuristic is the difference between 52 (total number of cards in the game) and the sum of the cards
         in the foundations across all suits.
 
         Returns:
@@ -978,7 +976,7 @@ class FreeCellGame:
         """
         Computes the total minimum number of moves required to complete the foundations based on the current game state.
 
-        The function calculates the number of moves required by considering the cards in the cascades and free cells, 
+        The function calculates the number of moves required by considering the cards in the cascades and free cells,
         estimating how many moves are needed to get each card to its respective foundation.
 
         Returns:
@@ -1015,9 +1013,9 @@ class FreeCellGame:
         """
         Computes the estimated minimum number of moves required to complete the foundations using a more detailed approach.
 
-        The function calculates the minimum number of moves by processing each card in the cascades and free cells, 
-        considering the blockers (cards in the way) and the gap between the current card rank and the required rank 
-        in the foundations. It accounts for cards already moved to the foundations and estimates the required moves 
+        The function calculates the minimum number of moves by processing each card in the cascades and free cells,
+        considering the blockers (cards in the way) and the gap between the current card rank and the required rank
+        in the foundations. It accounts for cards already moved to the foundations and estimates the required moves
         based on the current game state.
 
         Returns:
@@ -1120,24 +1118,24 @@ class FreeCellGame:
         solution_index=0,
     ):
         """
-    Renders the graphical interface of the FreeCell Solitaire game, including
-    the game state, cards, buttons, and other interactive elements. This method
-    is responsible for updating the visual elements based on the current game state.
+        Renders the graphical interface of the FreeCell Solitaire game, including
+        the game state, cards, buttons, and other interactive elements. This method
+        is responsible for updating the visual elements based on the current game state.
 
-    Parameters:
-    - highlight_move (tuple, optional): Specifies the move to highlight, represented by a tuple. Default is None.
-    - stats (dict, optional): Contains game statistics, such as score or time, to display on the screen. Default is None.
-    - algorithm (str, optional): The algorithm currently in use (e.g., "A*", "Greedy"). Default is "A*".
-    - hint_move (tuple, optional): Specifies a move to provide as a hint. Default is None.
-    - solution_index (int, optional): Index representing the current solution step if the game is being solved automatically. Default is 0.
+        Parameters:
+        - highlight_move (tuple, optional): Specifies the move to highlight, represented by a tuple. Default is None.
+        - stats (dict, optional): Contains game statistics, such as score or time, to display on the screen. Default is None.
+        - algorithm (str, optional): The algorithm currently in use (e.g., "A*", "Greedy"). Default is "A*".
+        - hint_move (tuple, optional): Specifies a move to provide as a hint. Default is None.
+        - solution_index (int, optional): Index representing the current solution step if the game is being solved automatically. Default is 0.
 
-    This function draws:
-    - The game screen with all cells (free cells, cascades, foundations) and their respective cards.
-    - Controls and buttons for actions such as "Solve", "New Game", "Step Back", "Pause", and "Undo".
-    - Additional information such as time, number of moves, and algorithm in use.
-    - Highlighted moves or hints as visual cues for the user.
-    - Dynamic updates based on the game’s progress, including handling player mode and solver mode.
-    """
+        This function draws:
+        - The game screen with all cells (free cells, cascades, foundations) and their respective cards.
+        - Controls and buttons for actions such as "Solve", "New Game", "Step Back", "Pause", and "Undo".
+        - Additional information such as time, number of moves, and algorithm in use.
+        - Highlighted moves or hints as visual cues for the user.
+        - Dynamic updates based on the game’s progress, including handling player mode and solver mode.
+        """
         screen.fill(GREEN)
         pygame.draw.rect(screen, DARK_GRAY, (0, 0, SCREEN_WIDTH, 60))
 
@@ -1615,7 +1613,7 @@ class FreeCellGame:
 class PerformanceMetrics:
     """
     A class to track and report performance metrics for algorithms, including time,
-    memory usage, and search statistics. This class is useful for monitoring the 
+    memory usage, and search statistics. This class is useful for monitoring the
     efficiency of algorithms and understanding their resource consumption during execution.
 
     Attributes:
@@ -1782,7 +1780,7 @@ def load_game_from_file(game_number):
     Returns:
         FreeCellGame: The game object containing the cascades, free cells, and foundations,
                       or None if there was an error loading the game.
-    
+
     Raises:
         ValueError: If the file contains invalid card data, such as an invalid suit.
     """
@@ -1850,7 +1848,7 @@ def save_solution_to_file(
 
     Returns:
         bool: True if the solution was successfully saved, False if there was an error.
-    
+
     Raises:
         IOError: If there is an issue with file access or writing.
     """
@@ -1939,7 +1937,7 @@ def format_move(move):
 
     Returns:
         str: A formatted string describing the move.
-    
+
     Notes:
         The move_type could be:
             - "supermove": Move multiple cards from one cascade to another.
@@ -1964,6 +1962,32 @@ def format_move(move):
 
 
 def solve_freecell_astar(game):
+    """
+    Solves a FreeCell solitaire game using the A* algorithm with heuristic1.
+
+    This function implements the A* search algorithm to find a solution path for a
+    FreeCell game. It uses a priority queue to explore states by their estimated
+    cost (heuristic value + path length) and tracks visited states to avoid cycles.
+
+    Parameters:
+    -----------
+    game : FreeCellGame
+        The initial FreeCell game state to solve.
+
+    Returns:
+    --------
+    tuple
+        A tuple containing:
+        - list or None: The sequence of moves that solve the game, or None if no solution found
+        - PerformanceMetrics: Object containing statistics about the search performance
+
+    Notes:
+    ------
+    - The search is limited to exploring a maximum of 200,000 states.
+    - Uses heuristic1() to estimate the cost to reach the goal state.
+    - Performance metrics tracked include: states explored, states generated,
+      maximum queue size, maximum search depth, and execution time.
+    """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.heuristic1(), id(game), game, [])]
@@ -2208,7 +2232,7 @@ def get_hint(game):
     Returns:
         str or None: The first move in the solution, formatted as a string, or None if no solution
                      could be found.
-    
+
     Notes:
         The function maps the current algorithm (stored in `current_algorithm`) to a corresponding
         algorithm identifier and calls the `solve_freecell` function to get the solution.
@@ -2392,7 +2416,7 @@ def solve_freecell(game, algorithm="astar"):
 
 def main():
     """
-    Main function to run the FreeCell game using Pygame. This function handles the game loop, 
+    Main function to run the FreeCell game using Pygame. This function handles the game loop,
     user inputs (keyboard and mouse events), game state management, and algorithm selection for solving the game.
 
     The game starts with a shuffled deck and the user can choose from various algorithms to solve the puzzle.
