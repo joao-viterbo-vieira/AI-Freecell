@@ -2375,7 +2375,7 @@ def solve_freecell_ids(game):
     """
     metrics = PerformanceMetrics()
     metrics.start()
-    max_states = 200000
+    max_states = 300000
     max_depth = 150
 
     for depth_limit in range(max_depth + 1):
