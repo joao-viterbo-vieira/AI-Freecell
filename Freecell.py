@@ -1965,14 +1965,14 @@ def solve_freecell_astar(game):
     """
     Solves FreeCell using A* search with heuristic1. Returns solution moves
     and performance metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.heuristic1(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2008,7 +2008,7 @@ def solve_freecell_astar2(game):
     """
     Solves FreeCell using A* search with heuristic2. Returns solution moves
     and performance metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
@@ -2051,14 +2051,14 @@ def solve_freecell_astar3(game):
     """
     Solves FreeCell using A* search with heuristic3. Returns solution moves
     and performance metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2094,14 +2094,14 @@ def solve_freecell_metaheuristic(game):
     """
     Solves FreeCell using A* search with meta_heuristic. Returns solution moves
     and performance metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.meta_heuristic(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2137,14 +2137,14 @@ def solve_freecell_metaheuristic2(game):
     """
     Solves FreeCell using A* search with meta_heuristic2. Returns solution moves
     and performance metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.meta_heuristic2(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2180,7 +2180,7 @@ def solve_freecell_weighted_astar(game, weight=1.5):
     """
     Solves FreeCell using weighted A* search with heuristic3. Weight parameter
     controls heuristic influence. Returns solution moves and metrics, or
-    (None, metrics) if no solution within 300,000 states.
+    (None, metrics) if no solution within 500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
@@ -2188,7 +2188,7 @@ def solve_freecell_weighted_astar(game, weight=1.5):
     heapq.heapify(queue)
     visited = set()
     visited.add(hash(game))
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = 0
     metrics.states_generated = 1
     metrics.max_queue_size = 1
@@ -2264,14 +2264,14 @@ def solve_freecell_greedy(game):
     """
     Solves FreeCell using greedy search with heuristic3. Returns
     solution moves and metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    500,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     queue = [(game.heuristic3(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 500000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2306,7 +2306,7 @@ def solve_freecell_bfs(game):
     metrics.start()
     queue = deque([(game, [])])
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 200000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:
@@ -2334,13 +2334,13 @@ def solve_freecell_dfs(game):
     """
     Solves FreeCell using depth-first search with depth limit of 150. Returns
     solution moves and metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    200,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
     stack = [(game, [])]
     visited = {hash(game)}
-    max_states = 300000
+    max_states = 200000
     max_depth = 150
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
@@ -2371,7 +2371,7 @@ def solve_freecell_ids(game):
     """
     Solves FreeCell using iterative deepening search with max depth of 150. Returns
     solution moves and metrics, or (None, metrics) if no solution found within
-    300,000 states.
+    200,000 states.
     """
     metrics = PerformanceMetrics()
     metrics.start()
