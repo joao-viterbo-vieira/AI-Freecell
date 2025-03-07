@@ -92,7 +92,7 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 4. Toggle "Auto On/Off" for automatic foundation moves
 5. Use "Hint" to get a suggested move
 6. If a supermove is possible and you want to select just the front card, click in the lower part of the front card
-7. At any moment the player can click "Solve" and thr AI Solver will solve the rest of the game
+7. At any moment the player can click "Solve" and the AI Solver will solve the rest of the game
 
 ### AI Solver Mode
 1. Select an algorithm from the dropdown
