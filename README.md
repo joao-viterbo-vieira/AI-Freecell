@@ -211,19 +211,16 @@ To import a custom game:
 
 ### Common Issues
 
-#### Game Freezes During Solving
+#### Game Freezes During Solving / Performance Problems
 - Try a different algorithm
 - Reduce the deck size
 - Restart the application
+- Close other applications
+- The user can also change the number of nodes used by doing CTRL + F and searching for "0000" in the code
 
 #### Invalid Moves
 - Ensure sequences alternate colors and follow descending order
 - Check supermove limitations
-
-#### Performance Problems
-- Close other applications
-- Try more efficient algorithms
-- Reduce deck size
 
 #### Game Loading Issues
 - Verify the game number exists (e.g game123.txt)
