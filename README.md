@@ -3,8 +3,6 @@
 ![FreeCell AI](https://img.shields.io/badge/FreeCell-AI%20Solver-green)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 
-![interface](interface.png)
-
 A Python implementation of the classic FreeCell solitaire card game featuring both a standalone playable version and a powerful AI solver with multiple algorithms.
 
 ## Table of Contents
@@ -249,7 +247,7 @@ A♥ 3♥ 2♥ A♦ A♣ A♠ 3♠ 3♦
 2♦ 2♠ 2♣ 3♣
 ```
 
-### Results (First try results zero-shot)
+### Results (Zero-shot)
 
 | Model | Time | Moves | Success |
 |-------|------|-------|---------|
