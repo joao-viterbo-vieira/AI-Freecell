@@ -664,13 +664,25 @@ class FreeCellGame:
         last_action = self.player_moves.pop()
         _, move = last_action  # Ignore action_type, treat all moves the same
 
-        move_type, source_type, source_idx, dest = move
+        # Get move type first without unpacking everything
+        move_type = move[0]
+
         if move_type == "supermove":
+            # Handle supermove (5 elements)
+            source_type = move[1]
+            source_idx = move[2]
+            dest = move[3]
             num_cards = move[4]
+
             cards = self.cascades[dest][-num_cards:]
             self.cascades[dest] = self.cascades[dest][:-num_cards]
             self.cascades[source_idx].extend(cards)
         else:
+            # Handle regular moves (4 elements)
+            source_type = move[1]
+            source_idx = move[2]
+            dest = move[3]
+
             if move_type == "foundation":
                 card = self.foundations[dest].pop()
             elif move_type == "free_cell":
@@ -678,6 +690,7 @@ class FreeCellGame:
                 self.free_cells[dest] = None
             else:  # cascade
                 card = self.cascades[dest].pop()
+
             if source_type == "cascade":
                 self.cascades[source_idx].append(card)
             else:  # free_cell
@@ -1134,7 +1147,7 @@ class FreeCellGame:
         - Controls and buttons for actions such as "Solve", "New Game", "Step Back", "Pause", and "Undo".
         - Additional information such as time, number of moves, and algorithm in use.
         - Highlighted moves or hints as visual cues for the user.
-        - Dynamic updates based on the game’s progress, including handling player mode and solver mode.
+        - Dynamic updates based on the game's progress, including handling player mode and solver mode.
         """
         screen.fill(GREEN)
         pygame.draw.rect(screen, DARK_GRAY, (0, 0, SCREEN_WIDTH, 60))
