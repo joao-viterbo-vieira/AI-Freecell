@@ -164,7 +164,7 @@ When enabled, cards automatically move to foundations when safe:
 
 ### Empty-to-Empty Optimization (E2E)
 When enabled, eliminates unnecessary moves between empty cascades:
-- Reduces search space without affecting solution quality
+- Reduces search space without affecting solution quality by restricting piece movement between free cascades (stopping useless moves)
 - Significantly improves performance of uninformed search algorithms (DFS and IDS)
 - Toggle with "E2E Moves Off/On" button in both player and solver modes
 
