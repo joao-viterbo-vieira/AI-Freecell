@@ -1,0 +1,26 @@
+Heuristic: Meta2
+Difficulty: Easy
+----------------------------------------
+Time Taken:
+  Values: [0.16, 1.46, 0.06, 0.05, 0.26]
+  Average: 0.40
+
+Peak Memory:
+  Values: [64.59, 118.3, 60.75, 59.27, 67.53]
+  Average: 74.09
+
+States Explored:
+  Values: [320, 2457, 127, 131, 436]
+  Average: 694.20
+
+States Generated:
+  Values: [3831, 34415, 1643, 1272, 5814]
+  Average: 9395.00
+
+States Per Second:
+  Values: [2007.74, 1682.41, 1993.27, 2445.84, 1695.58]
+  Average: 1964.97
+
+Solution Length Diff:
+  Values: [-4, -5, 1, 2, 12]
+  Average: 1.20

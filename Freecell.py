@@ -2223,7 +2223,7 @@ def solve_freecell_metaheuristic2(game):
     queue = [(game.meta_heuristic2(), id(game), game, [])]
     heapq.heapify(queue)
     visited = {hash(game)}
-    max_states = 500000
+    max_states = 700000
     metrics.states_explored = metrics.states_generated = metrics.max_queue_size = 1
 
     while queue and metrics.states_explored < max_states:

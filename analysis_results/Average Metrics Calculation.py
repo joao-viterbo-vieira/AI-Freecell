@@ -157,13 +157,10 @@ def print_and_save_results(results, output_file=None):
 def main():
     # Heuristic 1
     solution_files_heu1 = [
-        "solutions/solution_game_9998_Wa.txt",
-        "solutions/solution_game_164_Wa.txt",
-        "solutions/solution_game_1187_Wa.txt",
-        "solutions/solution_game_3148_Wa.txt", 
-        "solutions/solution_game_10913_Wa.txt",
+        "solutions/solution_game_32483_Meta2.txt",
+        "solutions/solution_game_20810_Meta2.txt",
     ]
-    true_solution_lengths_1 = [81, 103, 73, 73, 69]
+    true_solution_lengths_1 = [94, 89, 86, 78]
     
 
     
@@ -174,12 +171,12 @@ def main():
     results_heu1 = analyze_solution_files(
         solution_files_heu1, 
         true_solution_lengths_1, 
-        heuristic="Wa", 
-        difficulty="Easy"
+        heuristic="Meta2", 
+        difficulty="Hard"
     )
     print_and_save_results(
         results_heu1, 
-        output_file='analysis_results/Wa_Easy.txt'
+        output_file='analysis_results/Meta2_Hard.txt'
     )
     
     print("\n" + "="*50 + "\n")
