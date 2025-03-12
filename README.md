@@ -161,7 +161,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 - Required significant time for difficult deals and occasionally high memory usage.  
 - In the hard setups, solved only 2 of 4, with poor solution quality and memory costs comparable to Weighted A*.
 
-
+---
 ### Breadth-First Search (BFS)
 
 - **Principle**: Explores all nodes at a given depth before moving deeper.
@@ -173,7 +173,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 - Even with just 12 cards (which has a minimal solution of 12 moves), BFS only reached ~5 moves without automoves (or ~8 with automoves).  
 - Could not solve larger deals; memory usage is prohibitive.
 
-
+---
 ### Depth-First Search (DFS)
 
 - **Principle**: Explores one branch fully before backtracking.
@@ -185,7 +185,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 - For 12 cards, it found a 92-move solution (without automoves), which is very long compared to optimal.  
 - Cannot reliably solve problems beyond ~12 cards; simply too large to handle.
 
-
+---
 ### Iterative Deepening Search (IDS)
 
 - **Principle**: Repeatedly runs DFS with increasing depth limits, combining BFS optimality with DFS memory efficiency.
@@ -198,7 +198,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 - Failed to solve significantly larger problems (e.g., 28 cards or more) in tests.  
 - Tends to exceed the defined state limits and still not reach a solution, consuming a lot of time.
 
-
+---
 ### “Empty to Empty” Optimization (Disables unnecessary moves between empty spaces)
 
 - **Principle**: When enabled, eliminates unnecessary moves between empty cascades.
@@ -206,7 +206,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
   - Helps reduce the number of moves significantly for the 12-card problem (e.g., 12-game2.txt).  
   - Primarily beneficial in small setups.
 
-
+---
 ### Weighted A* (WA*)
 
 - **Principle**: A* variant with a weighted heuristic:  
@@ -223,7 +223,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 - In the easy setups, sometimes matched or exceeded the known solutions while maintaining moderate memory/time.  
 - In the hard setups, solved all 4 but with worse solutions than Heuristic 3, higher memory usage, and time similar to Greedy.
 
-
+---
 ### Meta-Heuristics (Meta, Meta2)
 
 - **Principle**: Custom approaches that integrate multiple factors (e.g., card arrangement patterns, strategic moves, partial heuristics).
@@ -248,13 +248,13 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
   - Nevertheless, it failed to solve the remaining 2 hard deals.
 
 
-
+---
 ### Automoves
 
 - **Observation**: Automoves generally have a positive impact on solution quality, helping reduce the manual moves needed.  
 - **Caveat**: For certain algorithms (DFS, IDS, Greedy), automoves can significantly affect run times, sometimes prolonging the search despite improving solution quality.
 
-
+---
 ### Conclusions
 
 1. **Uninformed Searches (BFS, DFS, IDS)**  
@@ -289,7 +289,8 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
    - For extremely difficult setups, consider combining heuristics or advanced optimizations (e.g., meta-heuristic approaches) to improve coverage and success rates.  
    - Meta-Heuristic 2 shows promise in speeding up solution times for certain deals, though it is not as reliable as the top A* methods.
   
-   
+---
+
 ## Advanced Features
 
 ### Cards solving visualization
