@@ -106,12 +106,8 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 2. Click "Load" or press Enter
 3. Built-in games include Easy (164, 1187, 3148, 9998, 10913) and Hard (169, 5087, 20810, 29596, 44732)
 
+
 ## AI Algorithms
-
-Below is an overview of the algorithms tested for solving FreeCell-like problems. Each algorithm is described in terms of its core principle, performance, memory usage, and ability to reach solutions for different deck sizes (e.g., 12-game2.txt, 28-game3.txt, 52 cards- game4.txt). We also present a comparative analysis for easy and hard setups (5 easy, 4 hard) with a maximum of 500,000 states explored.
-
-
-#$ AI Algorithms
 
 Below is an overview of the algorithms tested for solving FreeCell-like problems (e.g., 12-game2.txt, 28-game3.txt, 52 cards-game4.txt). Each algorithm is described in terms of its core principle, performance, memory usage, and ability to reach solutions for different deck sizes. We also present a comparative analysis for easy and hard setups (5 easy, 4 hard) with a maximum of 500,000 states explored.
 
