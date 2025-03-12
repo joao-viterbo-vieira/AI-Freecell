@@ -115,22 +115,22 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 ### A* Algorithm
 
 - **Principle**: Uses both path cost \(g(n)\) and heuristic \(h(n)\):  
-  \[
+  \
     f(n) = g(n) + h(n)
-  \]
+  \
 
 - **Variants**:  
-  - **A* Heuristic 1**:  
+  - **A * Heuristic 1**:  
     - Managed to solve with 12 cards and achieved the best (optimal) solution there.  
     - Failed to solve 28- and 52-card problems in our tests.  
     - Used a fair amount of memory and time, reaching a depth of ~14/16 for larger decks.
 
-  - **A* Heuristic 2** (A* Heu2):  
+  - **A * Heuristic 2** (A* Heu2):  
     - Generally the best performer for random deals.  
     - Solves up to 52 cards efficiently, with strong solutions (often optimal).  
     - Very good balance of speed and memory usage—top choice overall.
 
-  - **A* Heuristic 3** (A* Heu3):  
+  - **A * Heuristic 3** (A* Heu3):  
     - Second-best A* approach, producing solutions slightly worse than Heuristic 2.  
     - Very similar memory usage and time to Heuristic 2, but solutions are somewhat less optimal.
 
@@ -148,9 +148,9 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 ### Greedy Search
 
 - **Principle**: Considers only the heuristic value \(h(n)\):  
-  \[
+  \
     f(n) = h(n)
-  \]
+  \
 - **Pros**: Faster in simpler cases due to ignoring path cost.  
 - **Cons**: Often produces longer (suboptimal) solutions, can still be expensive in harder setups.
 
@@ -200,20 +200,18 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 
 ### “Empty to Empty” Optimization (Disables unnecessary moves between empty spaces)
 
-- **Principle**: An additional optimization for DFS and IDS that takes advantage of empty columns in the layout.
+- **Principle**: When enabled, eliminates unnecessary moves between empty cascades.
 - **Performance Notes**:  
   - Helps reduce the number of moves significantly for the 12-card problem (e.g., 12-game2.txt).  
-  - Does not appear to scale effectively for larger deals (28-game3.txt, 52 cards-game4.txt).  
-  - Primarily beneficial in small setups with few columns to manage.
-
+  - Primarily beneficial in small setups.
 
 
 ### Weighted A* (WA*)
 
 - **Principle**: A* variant with a weighted heuristic:  
-  \[
+  \
     f(n) = g(n) + w \times h(n), \quad w > 1
-  \]
+  \
 - **Pros**: Can find decent solutions more quickly than standard A* when \(w\) is not too high, reducing search effort.
 - **Cons**: Solutions are suboptimal compared to regular A*; can still be time-consuming in some cases.
 
@@ -262,11 +260,11 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
    - Ineffective for FreeCell-scale problems, either running out of memory (BFS) or failing to find any solution (DFS, IDS) for larger decks.  
    - Even at 12 cards, they often produce poor or partial solutions; “Empty to Empty” can help slightly, but only for small deals.
 
-2. **A* with Heuristic 2**  
+2. **A * with Heuristic 2**  
    - Remains the top algorithm overall for random deals, striking the best balance between speed, memory, and solution quality.  
    - However, it did fail to solve 1 out of 4 difficult setups in our tests.
 
-3. **A* with Heuristic 3**  
+3. **A * with Heuristic 3**  
    - Second-best behind Heuristic 2.  
    - Solved all 4 difficult deals but took more time/memory than it did with easy scenarios, and solutions were slightly worse than Heu2.
 
@@ -312,7 +310,6 @@ When enabled, cards automatically move to foundations when safe:
 
 ### Empty-to-Empty Optimization (E2E)
 When enabled, eliminates unnecessary moves between empty cascades:
-- Reduces search space without affecting solution quality by restricting piece movement between free cascades (stopping useless moves)
 - Disables unnecessary moves between empty spaces
 - Significantly improves performance of uninformed search algorithms (DFS and IDS)
 - Toggle with "E2E Moves Off/On" button in both player and solver modes
