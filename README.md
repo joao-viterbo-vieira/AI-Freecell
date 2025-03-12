@@ -144,6 +144,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
   - **Heuristic 2**: Solved 3 out of 4; good solutions, fast on average, and low memory usage.  
   - **Heuristic 3**: Solved all 4 with solutions a bit far from optimal. Averaged ~47 seconds, ~300 MB memory.
 
+---
 
 ### Greedy Search
 
