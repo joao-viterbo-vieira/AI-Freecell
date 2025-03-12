@@ -55,6 +55,7 @@ selected_sequence_source = None
 solving = False
 last_moved_card = None  # Tracks the last moved card in paused auto-solve mode
 auto_moves_enabled = False  # Start with automoves disabled
+empty_to_empty_moves_disabled = False  # Start with empty-to-empty moves enabled
 
 # Game timer
 game_timer = 0.0
@@ -324,6 +325,8 @@ class FreeCellGame:
                 - ("cascade", source_type, source_idx, dest_idx)  -> Move to a cascade
                 - ("supermove", "cascade", src_idx, dest_idx, num_cards)  -> Multi-card sequence move
         """
+        global empty_to_empty_moves_disabled
+
         valid_moves = []
         for source_type in ["cascade", "free_cell"]:
             sources = (
@@ -347,6 +350,16 @@ class FreeCellGame:
                     if (
                         source_type != "cascade" or i != source_idx
                     ) and self.can_move_to_cascade(card, i):
+                        # Skip moves between empty cascades if optimization is enabled
+                        if (
+                            empty_to_empty_moves_disabled
+                            and source_type == "cascade"
+                            and len(self.cascades[source_idx]) == 1
+                            and not self.cascades[i]
+                        ):
+                            # This would be moving a single card from a cascade (making it empty)
+                            # to an already empty cascade - skip if optimization is enabled
+                            continue
                         valid_moves.append(("cascade", source_type, source_idx, i))
 
         for src_idx, src_cascade in enumerate(self.cascades):
@@ -368,6 +381,14 @@ class FreeCellGame:
                         sequence[0].rank == self.cascades[dest_idx][-1].rank - 1
                         and sequence[0].color != self.cascades[dest_idx][-1].color
                     ):
+                        # Skip if optimization is enabled, this would empty source cascade
+                        # and destination is already empty
+                        if (
+                            empty_to_empty_moves_disabled
+                            and start_idx == 0
+                            and not self.cascades[dest_idx]
+                        ):
+                            continue
                         valid_moves.append(
                             ("supermove", "cascade", src_idx, dest_idx, len(sequence))
                         )
@@ -468,6 +489,8 @@ class FreeCellGame:
         Returns:
             list: A list of valid moves, including ("foundation", ...), ("cascade", ...), and ("supermove", ...).
         """
+        global empty_to_empty_moves_disabled
+
         valid_moves = []
         for source_type in ["cascade", "free_cell"]:
             sources = (
@@ -491,6 +514,14 @@ class FreeCellGame:
                     if (
                         source_type != "cascade" or i != source_idx
                     ) and self.can_move_to_cascade(card, i):
+                        # Skip moves between empty cascades if optimization is enabled
+                        if (
+                            empty_to_empty_moves_disabled
+                            and source_type == "cascade"
+                            and len(self.cascades[source_idx]) == 1
+                            and not self.cascades[i]
+                        ):
+                            continue
                         valid_moves.append(("cascade", source_type, source_idx, i))
 
         for src_idx, src_cascade in enumerate(self.cascades):
@@ -512,6 +543,14 @@ class FreeCellGame:
                         sequence[0].rank == self.cascades[dest_idx][-1].rank - 1
                         and sequence[0].color != self.cascades[dest_idx][-1].color
                     ):
+                        # Skip if optimization is enabled, this would empty source cascade
+                        # and destination is already empty
+                        if (
+                            empty_to_empty_moves_disabled
+                            and start_idx == 0
+                            and not self.cascades[dest_idx]
+                        ):
+                            continue
                         valid_moves.append(
                             ("supermove", "cascade", src_idx, dest_idx, len(sequence))
                         )
@@ -1512,7 +1551,7 @@ class FreeCellGame:
             screen.blit(play_text, (button_pos_x + 5, button_pos_y + 5))
 
             # Solver Auto Moves Button below "I want to play"
-            global auto_moves_enabled
+            global auto_moves_enabled, empty_to_empty_moves_disabled
             solver_auto_rect = pygame.Rect(button_pos_x, button_pos_y + 40, 130, 30)
             if auto_moves_enabled:
                 pygame.draw.rect(screen, LIGHT_GREEN, solver_auto_rect)
@@ -1521,8 +1560,20 @@ class FreeCellGame:
             else:
                 pygame.draw.rect(screen, LIGHT_RED, solver_auto_rect)
                 pygame.draw.rect(screen, BLACK, solver_auto_rect, 1)
-                auto_text = small_font.render("AutoMove off", True, BLACK)
+                auto_text = small_font.render("AutoMove Off", True, BLACK)
             screen.blit(auto_text, (button_pos_x + 10, button_pos_y + 45))
+
+            # Empty-to-Empty optimization button
+            empty_opt_rect = pygame.Rect(button_pos_x, button_pos_y + 80, 130, 30)
+            if empty_to_empty_moves_disabled:
+                pygame.draw.rect(screen, LIGHT_GREEN, empty_opt_rect)
+                pygame.draw.rect(screen, BLACK, empty_opt_rect, 1)
+                empty_text = small_font.render("E2E Moves Off", True, BLACK)
+            else:
+                pygame.draw.rect(screen, LIGHT_RED, empty_opt_rect)
+                pygame.draw.rect(screen, BLACK, empty_opt_rect, 1)
+                empty_text = small_font.render("E2E Moves On", True, BLACK)
+            screen.blit(empty_text, (button_pos_x + 10, button_pos_y + 85))
 
         elif player_mode and not solving and not game_ended:
             hint_rect = pygame.Rect(button_pos_x, button_pos_y, 100, 30)
@@ -1554,6 +1605,21 @@ class FreeCellGame:
                 pygame.draw.rect(screen, BLACK, auto_on_rect, 1)
                 auto_on_text = small_font.render("Auto On", True, WHITE)
                 screen.blit(auto_on_text, (button_pos_x + 15, auto_rect_y + 5))
+
+            # Empty-to-Empty optimization button
+            e2e_rect_y = auto_rect_y + 40
+            if empty_to_empty_moves_disabled:
+                e2e_off_rect = pygame.Rect(button_pos_x, e2e_rect_y, 100, 30)
+                pygame.draw.rect(screen, LIGHT_GREEN, e2e_off_rect)
+                pygame.draw.rect(screen, BLACK, e2e_off_rect, 1)
+                e2e_off_text = small_font.render("E2E Off", True, BLACK)
+                screen.blit(e2e_off_text, (button_pos_x + 15, e2e_rect_y + 5))
+            else:
+                e2e_on_rect = pygame.Rect(button_pos_x, e2e_rect_y, 100, 30)
+                pygame.draw.rect(screen, LIGHT_RED, e2e_on_rect)
+                pygame.draw.rect(screen, BLACK, e2e_on_rect, 1)
+                e2e_on_text = small_font.render("E2E On", True, BLACK)
+                screen.blit(e2e_on_text, (button_pos_x + 15, e2e_rect_y + 5))
 
         pygame.draw.rect(
             screen, DARK_GRAY, (SCREEN_WIDTH - 230, button_y - 50, 210, 30)
@@ -2485,10 +2551,28 @@ def main():
         - `current_game_number`: Number of the current game.
         - `current_algorithm`: The algorithm currently selected for solving the game.
         - `auto_moves_enabled`: Flag to enable or disable automatic moves for solving.
+        - `empty_to_empty_moves_disabled`: Flag to enable or disable empty-to-empty cascade moves.
         - `initial_game`: Stores the initial game state for undo functionality.
-
     """
-    global animation_delay, paused, game_timer, player_mode, selected_card, selected_source, selected_sequence, selected_sequence_source, solving, hint_move, last_moved_card, search_active, search_text, current_game_number, current_algorithm, auto_moves_enabled, initial_game  # Added initial_game to globals
+    global \
+        animation_delay, \
+        paused, \
+        game_timer, \
+        player_mode, \
+        selected_card, \
+        selected_source, \
+        selected_sequence, \
+        selected_sequence_source, \
+        solving, \
+        hint_move, \
+        last_moved_card, \
+        search_active, \
+        search_text, \
+        current_game_number, \
+        current_algorithm, \
+        auto_moves_enabled, \
+        empty_to_empty_moves_disabled, \
+        initial_game
 
     deck_size = 52
     game = FreeCellGame(deck_size=deck_size)
@@ -2518,6 +2602,7 @@ def main():
     last_moved_card = None
     current_game_number = None
     auto_moves_enabled = False  # Start with automoves disabled
+    empty_to_empty_moves_disabled = False  # Start with empty-to-empty moves enabled
     initial_game = None  # Initialize initial_game variable
 
     selected_sequence = None
@@ -2824,6 +2909,16 @@ def main():
                         # Toggle auto moves for solver
                         auto_moves_enabled = not auto_moves_enabled
                     elif (
+                        not solving
+                        and not player_mode
+                        and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 20
+                        and 330 <= y <= 360  # Position where E2E button is drawn
+                    ):
+                        # Toggle empty-to-empty optimization
+                        empty_to_empty_moves_disabled = (
+                            not empty_to_empty_moves_disabled
+                        )
+                    elif (
                         player_mode
                         and not solving
                         and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 50
@@ -2846,6 +2941,18 @@ def main():
                         and 330 <= y <= 360
                     ):  # Auto On/Off button click area
                         auto_moves_enabled = not auto_moves_enabled
+                    elif (
+                        player_mode
+                        and not solving
+                        and SCREEN_WIDTH - 150 <= x <= SCREEN_WIDTH - 50
+                        and 370
+                        <= y
+                        <= 400  # Position where E2E button is drawn in player mode
+                    ):
+                        # Toggle empty-to-empty optimization in player mode
+                        empty_to_empty_moves_disabled = (
+                            not empty_to_empty_moves_disabled
+                        )
                     elif player_mode and not solving:
                         game.handle_click(x, y)
                     if not search_box_rect.collidepoint((x, y)):

@@ -1,0 +1,38 @@
+3♥	2♦	A♥	3♠	2♥	2♣	3♣	2♠
+3♦	A♦	A♠	A♣				
+
+
+Solution for Game unknown1
+==================================================
+
+Performance Metrics:
+--------------------------------------------------
+Time taken: 0.02 seconds
+Memory used:0.00 MB
+Average memory::329.27 MB
+Peak memory usage: 266.27 MB
+States explored: 17
+States generated: 404
+States per second: 949.54
+Maximum queue size: 382
+Maximum depth reached: 15
+Solution length: 15
+Peak memory usage:266.27 MB
+
+Solution Moves:
+--------------------------------------------------
+Move 1: Move card from Cascade 1 to Free Cell 1
+Move 2: Move card from Cascade 1 to Free Cell 2
+Move 3: Move card from Cascade 2 to D Foundation
+Move 4: Move card from Cascade 2 to D Foundation
+Move 5: Move card from Cascade 3 to S Foundation
+Move 6: Move card from Cascade 3 to H Foundation
+Move 7: Move card from Cascade 4 to C Foundation
+Move 8: Move card from Cascade 4 to Free Cell 3
+Move 9: Move card from Cascade 5 to H Foundation
+Move 10: Move card from Cascade 6 to C Foundation
+Move 11: Move card from Cascade 7 to C Foundation
+Move 12: Move card from Cascade 8 to S Foundation
+Move 13: Move card from Free Cell 1 to D Foundation
+Move 14: Move card from Free Cell 2 to H Foundation
+Move 15: Move card from Free Cell 3 to S Foundation
