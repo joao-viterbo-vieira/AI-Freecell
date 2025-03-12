@@ -162,6 +162,12 @@ When enabled, cards automatically move to foundations when safe:
 - Cards move if all lower ranks of all suits are already in the foundation
 - Toggle in player mode with "Auto On/Off" or in solver mode with "AutoMove On/Off"
 
+### Empty-to-Empty Optimization (E2E)
+When enabled, eliminates unnecessary moves between empty cascades:
+- Reduces search space without affecting solution quality
+- Significantly improves performance of uninformed search algorithms (DFS and IDS)
+- Toggle with "E2E Moves Off/On" button in both player and solver modes
+
 ### Undo Moves (single player mode)
 - Revert any mistake with unlimited undo capability
 - Track and restore exact board states after each move
