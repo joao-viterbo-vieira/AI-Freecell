@@ -106,42 +106,190 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 2. Click "Load" or press Enter
 3. Built-in games include Easy (164, 1187, 3148, 9998, 10913) and Hard (169, 5087, 20810, 29596, 44732)
 
+
 ## AI Algorithms
 
+Below is an overview of the algorithms tested for solving FreeCell-like problems (e.g., 12-game2.txt, 28-game3.txt, 52 cards-game4.txt). Each algorithm is described in terms of its core principle, performance, memory usage, and ability to reach solutions for different deck sizes. We also present a comparative analysis for easy and hard setups (5 easy, 4 hard) with a maximum of 500,000 states explored.
+
+
 ### A* Algorithm
-- Uses both heuristic evaluation and path cost: `f(n) = g(n) + h(n)`
-- Three variants with different heuristics (A*, A* Heu2, A* Heu3)
-- Balanced performance with optimal solutions
-- Default choice for most games
 
-### Greedy Best-First Search
-- Only considers heuristic value: `f(n) = h(n)`
-- Faster but may produce longer solutions
-- Good for quick solutions to easier games
+- **Principle**: Uses both path cost \(g(n)\) and heuristic \(h(n)\):  
+  \
+    f(n) = g(n) + h(n)
+  \
 
+- **Variants**:  
+  - **A * Heuristic 1**:  
+    - Managed to solve with 12 cards and achieved the best (optimal) solution there.  
+    - Failed to solve 28- and 52-card problems in our tests.  
+    - Used a fair amount of memory and time, reaching a depth of ~14/16 for larger decks.
+
+  - **A * Heuristic 2** (A* Heu2):  
+    - Generally the best performer for random deals.  
+    - Solves up to 52 cards efficiently, with strong solutions (often optimal).  
+    - Very good balance of speed and memory usage—top choice overall.
+
+  - **A * Heuristic 3** (A* Heu3):  
+    - Second-best A* approach, producing solutions slightly worse than Heuristic 2.  
+    - Very similar memory usage and time to Heuristic 2, but solutions are somewhat less optimal.
+
+#### Performance Notes (Heuristic 2 and Heuristic 3) with 52-Card Deals
+
+- **Easy Setups (5 tested)**:  
+  - **Heuristic 2**: Excellent solutions, near-optimal results, moderate memory/time.  
+  - **Heuristic 3**: Slightly worse solutions than Heuristic 2, but still fast and memory-friendly.
+
+- **Hard Setups (4 tested)**:  
+  - **Heuristic 2**: Solved 3 out of 4; good solutions, fast on average, and low memory usage.  
+  - **Heuristic 3**: Solved all 4 with solutions a bit far from optimal. Averaged ~47 seconds, ~300 MB memory.
+
+---
+
+### Greedy Search
+
+- **Principle**: Considers only the heuristic value \(h(n)\):  
+  \
+    f(n) = h(n)
+  \
+- **Pros**: Faster in simpler cases due to ignoring path cost.  
+- **Cons**: Often produces longer (suboptimal) solutions, can still be expensive in harder setups.
+
+#### Performance Notes
+
+- For 52-card deals, solutions tend to be much worse than A*.  
+- Required significant time for difficult deals and occasionally high memory usage.  
+- In the hard setups, solved only 2 of 4, with poor solution quality and memory costs comparable to Weighted A*.
+
+---
 ### Breadth-First Search (BFS)
-- Explores all nodes at current depth before moving deeper
-- Guarantees shortest solution but memory intensive
 
+- **Principle**: Explores all nodes at a given depth before moving deeper.
+- **Pros**: Guarantees the shortest solution (if it finds one).
+- **Cons**: Extremely memory-intensive; not suitable for FreeCell-scale problems.
 
+#### Performance Notes
+
+- Even with just 12 cards (which has a minimal solution of 12 moves), BFS only reached ~5 moves without automoves (or ~8 with automoves).  
+- Could not solve larger deals; memory usage is prohibitive.
+
+---
 ### Depth-First Search (DFS)
-- Explores branches as far as possible before backtracking
-- Memory efficient but not guaranteed optimal
-- Useful for deeply nested solutions
 
+- **Principle**: Explores one branch fully before backtracking.
+- **Pros**: Very low memory usage.
+- **Cons**: Not guaranteed optimal, can get stuck in deep paths.
+
+#### Performance Notes
+
+- For 12 cards, it found a 92-move solution (without automoves), which is very long compared to optimal.  
+- Cannot reliably solve problems beyond ~12 cards; simply too large to handle.
+
+---
 ### Iterative Deepening Search (IDS)
-- Combines BFS optimality with DFS space efficiency
-- Good alternative to A* for complex games
 
+- **Principle**: Repeatedly runs DFS with increasing depth limits, combining BFS optimality with DFS memory efficiency.
+- **Pros**: In theory, can find optimal solutions with reduced memory usage compared to BFS.
+- **Cons**: Potentially high time cost due to repeated expansions.
+
+#### Performance Notes
+
+- Achieved a 72-move solution for 12 cards (better than DFS).  
+- Failed to solve significantly larger problems (e.g., 28 cards or more) in tests.  
+- Tends to exceed the defined state limits and still not reach a solution, consuming a lot of time.
+
+---
+### “Empty to Empty” Optimization (Disables unnecessary moves between empty spaces)
+
+- **Principle**: When enabled, eliminates unnecessary moves between empty cascades.
+- **Performance Notes**:  
+  - Helps reduce the number of moves significantly for the 12-card problem (e.g., 12-game2.txt).  
+  - Primarily beneficial in small setups.
+
+---
 ### Weighted A* (WA*)
-- Modified A* with weighted heuristic: `f(n) = g(n) + w × h(n)` where `w > 1`
-- Finds good solutions faster than standard A*
-- Use when speed matters more than perfect optimality
 
-### Meta-heuristic (Meta, Meta2)
-- Custom approach combining multiple evaluation factors
-- Considers card arrangement patterns and strategic moves
-- Balances solution quality and search time
+- **Principle**: A* variant with a weighted heuristic:  
+  \
+    f(n) = g(n) + w \times h(n), \quad w > 1
+  \
+- **Pros**: Can find decent solutions more quickly than standard A* when \(w\) is not too high, reducing search effort.
+- **Cons**: Solutions are suboptimal compared to regular A*; can still be time-consuming in some cases.
+
+#### Performance Notes
+
+- With 52 cards, it took around 17 seconds without automoves, while A* Heuristic 2 took only ~1.4 seconds.  
+- Uses less memory compared to BFS, but solutions are worse than A* Heuristic 3.  
+- In the easy setups, sometimes matched or exceeded the known solutions while maintaining moderate memory/time.  
+- In the hard setups, solved all 4 but with worse solutions than Heuristic 3, higher memory usage, and time similar to Greedy.
+
+---
+### Meta-Heuristics (Meta, Meta2)
+
+- **Principle**: Custom approaches that integrate multiple factors (e.g., card arrangement patterns, strategic moves, partial heuristics).
+- **Pros**: Potential for flexible adaptation; can significantly reduce search time or memory usage depending on the design.
+- **Cons**: Highly sensitive to how heuristics are combined; some variants might fail on certain deals or produce suboptimal solutions.
+
+### Meta 1
+
+- For easy setups, it used more time/memory than expected, producing solutions that were not as good as A*.  
+- In the hard setups, it only solved 1 of the 4 problems, used a large amount of memory (up to 10× more than Greedy), and produced poor-quality solutions.
+
+### Meta 2 (Improved Meta-Heuristic)
+
+- **Easy Setups**:  
+  - Recorded the lowest average time among all algorithms, even faster than A* Heuristic 3 (previously the fastest).  
+  - Found better solutions than A* Heuristic 3, though still slightly below A* Heuristic 2.  
+  - Consumed relatively little memory.
+
+- **Hard Setups**:  
+  - Solved 2 of the 4 difficult setups (improvement over Meta 1, which solved only 1).  
+  - Required little time and memory for those it solved.  
+  - Nevertheless, it failed to solve the remaining 2 hard deals.
+
+
+---
+### Automoves
+
+- **Observation**: Automoves generally have a positive impact on solution quality, helping reduce the manual moves needed.  
+- **Caveat**: For certain algorithms (DFS, IDS, Greedy), automoves can significantly affect run times, sometimes prolonging the search despite improving solution quality.
+
+---
+### Conclusions
+
+1. **Uninformed Searches (BFS, DFS, IDS)**  
+   - Ineffective for FreeCell-scale problems, either running out of memory (BFS) or failing to find any solution (DFS, IDS) for larger decks.  
+   - Even at 12 cards, they often produce poor or partial solutions; “Empty to Empty” can help slightly, but only for small deals.
+
+2. **A * with Heuristic 2**  
+   - Remains the top algorithm overall for random deals, striking the best balance between speed, memory, and solution quality.  
+   - However, it did fail to solve 1 out of 4 difficult setups in our tests.
+
+3. **A * with Heuristic 3**  
+   - Second-best behind Heuristic 2.  
+   - Solved all 4 difficult deals but took more time/memory than it did with easy scenarios, and solutions were slightly worse than Heu2.
+
+4. **Weighted A***  
+   - Potentially faster than standard A* for some deals, but solutions remain suboptimal.  
+
+5. **Greedy**  
+   - Faster on simpler deals but performed poorly on more complex ones, using large amounts of memory/time.
+
+6. **Meta-Heuristic 1**  
+   - Inconsistent; solved only 1 of 4 hard setups.  
+   - High memory usage in tough scenarios.
+
+7. **Meta-Heuristic 2**  
+   - Very good for easy setups: fastest on average, with solutions surpassing A* Heuristic 3 yet still below A* Heuristic 2.  
+   - Better than Meta 1 on hard setups, solving 2 of 4 deals.  
+   - Low time and memory for those solved but did not cover all hard cases.
+
+8. **General Recommendation**  
+   - **A* Heuristic 2** is the safest bet for a wide variety of deals, offering an excellent trade-off of performance and solution quality.  
+   - For extremely difficult setups, consider combining heuristics or advanced optimizations (e.g., meta-heuristic approaches) to improve coverage and success rates.  
+   - Meta-Heuristic 2 shows promise in speeding up solution times for certain deals, though it is not as reliable as the top A* methods.
+  
+---
 
 ## Advanced Features
 
@@ -164,7 +312,7 @@ When enabled, cards automatically move to foundations when safe:
 
 ### Empty-to-Empty Optimization (E2E)
 When enabled, eliminates unnecessary moves between empty cascades:
-- Reduces search space without affecting solution quality by restricting piece movement between free cascades (stopping useless moves)
+- Disables unnecessary moves between empty spaces
 - Significantly improves performance of uninformed search algorithms (DFS and IDS)
 - Toggle with "E2E Moves Off/On" button in both player and solver modes
 
