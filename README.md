@@ -109,7 +109,7 @@ Move all cards to the four foundation piles, building up from Ace to King by sui
 
 ## AI Algorithms
 
-Below is an overview of the algorithms tested for solving FreeCell-like problems (e.g., 12-game2.txt, 28-game3.txt, 52 cards-game4.txt). Each algorithm is described in terms of its core principle, performance, memory usage, and ability to reach solutions for different deck sizes. We also present a comparative analysis for easy and hard setups (5 easy, 4 hard) with a maximum of 500,000 states explored.
+Below is an overview of the algorithms tested for solving FreeCell-like problems (e.g., 12-game2.txt, 28-game3.txt, 52 cards-game4.txt). Each algorithm is described in terms of its core principle, performance, memory usage, and ability to reach solutions for different deck sizes. We also present a comparative analysis for easy and hard setups (5 easy, 4 hard) with a maximum of 500,000 states explored. Check `Results_Freecell_algorithms.xlsx` to review AI algorithm performance comparisons for FreeCell problems 
 
 
 ### A* Algorithm
