@@ -171,7 +171,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 #### Performance Notes
 
 - Even with just 12 cards (which has a minimal solution of 12 moves), BFS only reached ~5 moves without automoves (or ~8 with automoves).  
-- Could not solve larger deals; memory usage is prohibitive.
+- Could not solve any deals; memory usage is prohibitive.
 
 ---
 ### Depth-First Search (DFS)
@@ -183,7 +183,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 #### Performance Notes
 
 - For 12 cards, it found a 92-move solution (without automoves), which is very long compared to optimal.  
-- Cannot reliably solve problems beyond ~12 cards; simply too large to handle.
+- Cannot solve problems beyond ~12 cards; simply too large to handle.
 
 ---
 ### Iterative Deepening Search (IDS)
@@ -203,7 +203,7 @@ Below is an overview of the algorithms tested for solving FreeCell-like problems
 
 - **Principle**: When enabled, eliminates unnecessary moves between empty cascades.
 - **Performance Notes**:  
-  - Helps reduce the number of moves significantly for the 12-card problem (e.g., 12-game2.txt).  
+  - Helps reduce the number of moves significantly for the 12-card problem (e.g., 12-game2.txt) for DFS and IDS algorithms.  
   - Primarily beneficial in small setups.
 
 ---
