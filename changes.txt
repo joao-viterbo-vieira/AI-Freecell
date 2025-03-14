@@ -1,0 +1,37 @@
+Improved AI FreeCell Project
+
+Implementation and E2E Testing of Empty-to-Empty Moves
+
+Implementation and end-to-end testing of a feature allowing activation or deactivation of 
+empty-to-empty cascade moves for algorithm testing purposes. When enabled, this feature 
+eliminates unnecessary moves between empty cascades.
+
+Results:
+• Significantly reduces the number of moves for the 12-card problem (e.g., 12-
+  game2.txt) in both DFS and IDS algorithms
+• Primarily beneficial in small game setups
+• Full results available in README.md, appendix slide 29, and the Excel spreadsheet
+
+Implementation and Testing of New Meta-Heuristic
+
+A new multi-factor scoring system was implemented with the following design:
+• Rewards cards in foundations (-10 points per card)
+• Penalizes occupied free cells (+5 points per cell)
+• Penalizes unordered cards in cascades (+1 point per disorder)
+
+Results of Meta-Heuristic 2:
+• Very effective for easy setups: fastest on average, with solutions surpassing A* 
+  Heuristic 3 yet still below A* Heuristic 2
+• Better than Meta-Heuristic 1 on hard setups, solving 2 of 4 challenging deals
+• Low time and memory consumption for solved cases, though did not successfully 
+  solve all hard cases
+
+Additional Important Improvements
+
+• Created detailed video tutorial/demo of the entire program with voice narration (New_Demo.mp4)
+• Enhanced README.md with detailed description of algorithm results in section 6 
+  (AI algorithms) and implementation of empty-to-empty moves removal
+• Updated presentation slides with new information (slide 17 – metaheuristic2, slide 11 
+  E2E optimization and appendix slides 27, 28, 29)
+• Made minor improvements to the user interface
+• Updated Results_Freecell_algorithms.xlsx with new results
