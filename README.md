@@ -5,6 +5,9 @@
 
 A Python implementation of the classic FreeCell solitaire card game featuring both a standalone playable version and a powerful AI solver with multiple algorithms.
 
+![FreeCell Interface Screenshot](interface.png)
+
+
 ## Table of Contents
 1. [Overview & Features](#overview--features)
 2. [Installation](#installation)
